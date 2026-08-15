@@ -1,0 +1,1102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Biblioteca Inteligente com IA - Dashboard</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--ink:#152033;--muted:#657086;--line:#dfe5ee;--accent:#365f91;--accent2:#6e7f99;--soft:#eef3f9;--warn:#fff4d8;--ok:#edf5ef;--shadow:0 7px 18px rgba(17,35,60,.08)}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}
+header{background:linear-gradient(135deg,#233f67,#416f9e);color:white;padding:26px 34px 22px}
+header h1{margin:0;font-size:28px;letter-spacing:-.4px} header p{margin:8px 0 0;color:#e7eef7;font-size:14px}
+.container{max-width:1500px;margin:auto;padding:22px}
+.notice{background:#fff;border-left:4px solid var(--accent);padding:12px 15px;border-radius:8px;box-shadow:var(--shadow);font-size:13px;margin-bottom:18px}
+.section-title{font-size:17px;margin:24px 0 10px;font-weight:750}.section-title span{font-size:12px;font-weight:500;color:var(--muted);margin-left:8px}
+.filters{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:10px;background:var(--card);padding:14px;border-radius:12px;box-shadow:var(--shadow)}
+.filters.history{grid-template-columns:repeat(5,minmax(140px,1fr))}.filter label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:5px}.filter select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--ink)}
+.actions{display:flex;justify-content:flex-end;margin-top:8px}.actions button{border:0;background:#e9eef5;color:#274769;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:650}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:16px 0}.kpi{background:var(--card);padding:15px 16px;border-radius:12px;box-shadow:var(--shadow);min-height:94px}.kpi .label{font-size:12px;color:var(--muted);font-weight:650}.kpi .value{font-size:31px;font-weight:800;margin-top:7px}.kpi .sub{font-size:12px;color:var(--muted);margin-top:4px}.partial{display:inline-block;background:var(--warn);padding:2px 7px;border-radius:999px;font-size:10px;color:#72591b;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.card{background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:15px;overflow:hidden}.card h3{margin:0 0 4px;font-size:15px}.card .desc{color:var(--muted);font-size:11px;margin-bottom:8px}.chart{min-height:260px;position:relative}.chart svg{width:100%;height:260px;overflow:visible}.tooltip{position:fixed;pointer-events:none;background:#172238;color:#fff;padding:7px 9px;border-radius:6px;font-size:11px;display:none;z-index:50;max-width:260px}
+.barrow{display:flex;align-items:center;gap:8px;margin:7px 0}.barlabel{width:175px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bartrack{height:17px;background:#edf1f5;border-radius:4px;flex:1;position:relative}.barfill{height:100%;background:#557da8;border-radius:4px}.barval{width:45px;text-align:right;font-size:11px;font-weight:700}.smallnote{background:var(--warn);padding:9px 11px;border-radius:8px;font-size:11px;color:#5d4c21;margin-top:9px}.method{margin-top:16px;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:11px;color:var(--muted)}
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+.result-card{background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:15px;min-width:0}
+.result-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+.result-head h3{margin:0;font-size:15px}.result-count{font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap}
+.table-wrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.result-table{width:100%;border-collapse:collapse;font-size:11px;background:white}
+.result-table th{position:sticky;top:0;background:#eef3f9;color:#40516a;text-align:left;padding:8px;border-bottom:1px solid var(--line);z-index:1}
+.result-table td{padding:8px;border-bottom:1px solid #edf1f5;vertical-align:top}
+.result-table tr:last-child td{border-bottom:0}
+.result-table .title-cell{font-weight:700;min-width:210px}
+.empty-result{padding:18px;color:var(--muted);font-size:12px;text-align:center}
+@media(max-width:1050px){.results-grid{grid-template-columns:1fr}}
+
+footer{padding:26px;text-align:center;color:var(--muted);font-size:11px}
+@media(max-width:1050px){.filters,.filters.history{grid-template-columns:repeat(2,1fr)}.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+@media(max-width:600px){header{padding:22px 18px}.container{padding:12px}.filters,.filters.history{grid-template-columns:1fr}.kpis{grid-template-columns:1fr}.barlabel{width:125px}}
+
+/* Estrutura revisada: hierarquia, espaçamento e consistência visual */
+.dashboard-section{margin-top:28px}
+.section-title{margin-top:28px;margin-bottom:12px}
+.summary-grid,.indicator-grid,.profile-grid{display:grid;gap:14px;margin:0 0 18px}
+.summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.indicator-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.profile-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.summary-card,.indicator-card,.profile-card{
+  background:var(--card);border-radius:12px;box-shadow:var(--shadow);
+  padding:16px;min-height:112px;display:flex;flex-direction:column;justify-content:center;
+}
+.summary-card .label,.indicator-card .label,.profile-card .label{
+  color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em
+}
+.summary-card .value,.indicator-card .value{font-size:30px;line-height:1.1;font-weight:800;margin:7px 0 4px}
+.profile-card .value{font-size:19px;line-height:1.25;font-weight:800;margin:7px 0 4px;overflow-wrap:anywhere}
+.summary-card .sub,.indicator-card .sub,.profile-card .sub{font-size:11px;color:var(--muted);line-height:1.35}
+.universe-note{
+  background:#f8fafc;border:1px solid var(--line);border-radius:10px;
+  padding:10px 12px;margin:0 0 14px;font-size:11px;color:var(--muted);line-height:1.45
+}
+.detail-divider{
+  margin:34px 0 10px;padding-top:18px;border-top:2px solid #dde5ef
+}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.metric-grid .card{min-width:0}
+#kReadCard.is-hidden,#kUnreadCard.is-hidden{display:none}
+@media(max-width:1050px){
+  .summary-grid,.indicator-grid,.profile-grid{grid-template-columns:1fr 1fr}
+  .metric-grid{grid-template-columns:1fr}
+}
+@media(max-width:650px){
+  .summary-grid,.indicator-grid,.profile-grid{grid-template-columns:1fr}
+}
+
+
+
+/* Recordes fixos — bloco compacto */
+.records-title{font-size:13px;margin:16px 0 8px;font-weight:750;color:var(--ink)}
+.records-title span{font-size:10px;font-weight:500;color:var(--muted);margin-left:6px}
+.records-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:0 0 18px}
+.record-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:78px;box-shadow:0 3px 10px rgba(17,35,60,.045)}
+.record-card .label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.035em;color:var(--muted)}
+.record-card .value{font-size:17px;line-height:1.18;font-weight:800;margin:5px 0 3px;color:var(--ink)}
+.record-card .sub{font-size:9.5px;line-height:1.35;color:var(--muted)}
+.record-card.primary{border-top:3px solid var(--accent)}
+@media(max-width:1050px){.records-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.records-grid{grid-template-columns:1fr}}
+
+.comparison-note{font-size:11px;color:var(--muted);line-height:1.45;margin-top:8px}
+.lag-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}
+.lag-box{background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:10px}
+.lag-box .n{font-size:20px;font-weight:800}.lag-box .t{font-size:10px;color:var(--muted);margin-top:2px}
+@media(max-width:850px){.lag-summary{grid-template-columns:1fr 1fr}}
+
+</style></head>
+<body>
+<header><h1>Biblioteca Inteligente com IA</h1><p>Análise da coleção e do histórico de leitura com dados auditados, tratados e validados.</p></header>
+<div class="container">
+
+<div class="notice"><strong>Nota metodológica:</strong> coleção e histórico são bases distintas. Os filtros atuam apenas sobre sua respectiva base. 2026 é um ano parcial; títulos semelhantes não são tratados automaticamente como duplicidades.</div>
+
+<div class="section-title">Resumo geral <span>indicadores fixos da base</span></div>
+<div class="summary-grid">
+  <div class="summary-card">
+    <div class="label">Total de livros na estante</div>
+    <div class="value" id="kBaseTotal">325</div>
+    <div class="sub">cadastros/edições registrados na planilha</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">Total de leituras registradas</div>
+    <div class="value" id="kBaseHistory">275</div>
+    <div class="sub">274 registros com data + 1 sem data</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">Leituras em 2026</div>
+    <div class="value" id="kBase2026">28</div>
+    <div class="sub">até o momento</div>
+  </div>
+</div>
+
+<div class="records-title">Recordes de leitura <span>referências fixas do histórico completo</span></div>
+<div class="records-grid" id="fixedReadingRecords">
+  <div class="record-card primary">
+    <div class="label">Ano em que mais leu</div>
+    <div class="value" id="fixedPeakYear">—</div>
+    <div class="sub" id="fixedPeakYearSub">—</div>
+  </div>
+  <div class="record-card">
+    <div class="label">Mês com mais leituras no histórico</div>
+    <div class="value" id="fixedPeakMonth">—</div>
+    <div class="sub" id="fixedPeakMonthSub">datas mensais confiáveis</div>
+  </div>
+  <div class="record-card">
+    <div class="label">Dia da semana com mais finalizações</div>
+    <div class="value" id="fixedPeakWeekday">—</div>
+    <div class="sub" id="fixedPeakWeekdaySub">datas diárias confiáveis</div>
+  </div>
+  <div class="record-card">
+    <div class="label">Leituras com data confiável</div>
+    <div class="value" id="fixedReliableDates">—</div>
+    <div class="sub" id="fixedReliableDatesSub">01/01/AAAA excluído de mês e dia</div>
+  </div>
+  <div class="record-card">
+    <div class="label">Tendência histórica dos meses de pico</div>
+    <div class="value" id="fixedPeakMonthTrend">—</div>
+    <div class="sub" id="fixedPeakMonthTrendSub">—</div>
+  </div>
+</div>
+
+<div class="section-title">Filtros da estante atual <span>afetam cartões e visuais da estante atual</span></div>
+<div class="filters" id="collectionFilters">
+ <div class="filter"><label>Status de leitura</label><select id="fStatus"></select></div>
+ <div class="filter"><label>Autor</label><select id="fAuthor"></select></div>
+ <div class="filter"><label>Editora</label><select id="fPublisher"></select></div>
+ <div class="filter"><label>Ano de compra</label><select id="fPurchaseYear"></select></div>
+</div>
+<div class="actions"><button onclick="resetCollectionFilters()">Limpar filtros da estante</button></div>
+
+<div class="section-title">Filtros do histórico de leituras <span>afetam cartões e visuais do histórico</span></div>
+<div class="filters history">
+ <div class="filter"><label>Ano de leitura</label><select id="fReadYear"></select></div>
+ <div class="filter"><label>Tipo de leitura</label><select id="fFormat"></select></div>
+ <div class="filter"><label>Pessoa que emprestou</label><select id="fLoaner"></select></div>
+ <div class="filter"><label>Origem/instituição</label><select id="fOrigin"></select></div>
+ <div class="filter"><label>Status histórico</label><select id="fHistStatus"></select></div>
+</div>
+<div class="actions"><button onclick="resetHistoryFilters()">Limpar filtros do histórico</button></div>
+
+<div class="section-title">Indicadores da estante <span>respondem apenas aos filtros da estante atual</span></div>
+<div class="indicator-grid">
+  <div class="indicator-card" id="kShelfCutCard">
+    <div class="label" id="kShelfCutLabel">Livros na estante</div>
+    <div class="value" id="kTotal">325</div>
+    <div class="sub" id="kTotalSub">nenhum filtro aplicado</div>
+  </div>
+  <div class="indicator-card" id="kReadCard">
+    <div class="label">Lidos no recorte</div>
+    <div class="value" id="kRead">119</div>
+    <div class="sub" id="kReadRate">36,62% do recorte da estante</div>
+  </div>
+  <div class="indicator-card" id="kUnreadCard">
+    <div class="label">Não lidos no recorte</div>
+    <div class="value" id="kUnread">190</div>
+    <div class="sub" id="kUnreadRate">58,46% do recorte da estante</div>
+  </div>
+</div>
+
+<div class="indicator-grid" id="shelfAuthorInsight" style="display:none;margin:0 0 18px">
+  <div class="indicator-card">
+    <div class="label" id="kShelfAuthorInsightLabel">Destaque de autor no status selecionado</div>
+    <div class="value" id="kShelfAuthorInsightValue">—</div>
+    <div class="sub" id="kShelfAuthorInsightSub">—</div>
+  </div>
+</div>
+
+<div class="result-card" id="shelfResultsCard" style="display:none;margin:0 0 18px">
+  <div class="result-head">
+    <div>
+      <h3 id="shelfResultsTitle">Livros correspondentes aos filtros da estante</h3>
+      <div class="desc">Livros da estante atual que correspondem aos filtros selecionados.</div>
+    </div>
+    <div class="result-count" id="shelfResultsCount"></div>
+  </div>
+  <div class="table-wrap" id="shelfResults"></div>
+</div>
+
+<div class="section-title">Perfil de leitura <span>métricas do histórico de leituras</span></div>
+<div class="universe-note">
+  A estante atual e o histórico de leituras são universos diferentes. Os 119 livros marcados como lidos na estante não devem ser somados nem subtraídos diretamente dos 275 registros históricos.
+</div>
+<div class="indicator-grid" id="historyFilterSummary" style="display:none;margin-bottom:14px">
+  <div class="indicator-card" id="kHistoryCutCard">
+    <div class="label" id="kHistoryCutLabel">Leituras no recorte</div>
+    <div class="value" id="kHistoryCut">0</div>
+    <div class="sub" id="kHistoryCutSub">nenhum filtro aplicado</div>
+  </div>
+</div>
+<div class="profile-grid" id="readingPatternMetrics">
+  <div class="profile-card">
+    <div class="label" id="pPeakYearLabel">Ano em que mais leu</div>
+    <div class="value" id="pPeakYear">—</div>
+    <div class="sub" id="pPeakYearSub">—</div>
+  </div>
+  <div class="profile-card">
+    <div class="label" id="pPeakMonthLabel">Mês mais lido</div>
+    <div class="value" id="pPeakMonth">—</div>
+    <div class="sub" id="pPeakMonthSub">—</div>
+  </div>
+  <div class="profile-card">
+    <div class="label">Dia da semana em que mais finaliza livros</div>
+    <div class="value" id="pPeakWeekday">—</div>
+    <div class="sub" id="pPeakWeekdaySub">—</div>
+  </div>
+</div>
+<div class="profile-grid">
+  <div class="profile-card">
+    <div class="label">Destaque entre autores no histórico</div>
+    <div class="value" id="pTopAuthor">—</div>
+    <div class="sub" id="pTopAuthorSub">—</div>
+  </div>
+  <div class="profile-card">
+    <div class="label">Destaque entre formatos no histórico</div>
+    <div class="value" id="pTopFormat">—</div>
+    <div class="sub" id="pTopFormatSub">—</div>
+  </div>
+  <div class="profile-card">
+    <div class="label">Destaque entre categorias do histórico</div>
+    <div class="value" id="pTopHistStatus">—</div>
+    <div class="sub" id="pTopHistStatusSub">—</div>
+  </div>
+</div>
+
+<div class="result-card" id="historyResultsCard" style="display:none;margin:0 0 18px">
+  <div class="result-head">
+    <div>
+      <h3>Leituras correspondentes aos filtros do histórico</h3>
+      <div class="desc">Registros do histórico de leituras que correspondem aos filtros selecionados.</div>
+    </div>
+    <div class="result-count" id="historyResultsCount"></div>
+  </div>
+  <div class="table-wrap" id="historyResults"></div>
+</div>
+
+<div class="metric-grid">
+  <div class="card">
+    <h3>Autores mais frequentes no histórico de leituras</h3>
+    <div class="desc">Top 10 autores entre os registros históricos que correspondem aos filtros aplicados.</div>
+    <div class="chart" id="cReadAuthors"></div>
+  </div>
+  <div class="card">
+    <h3>Tipos de leitura</h3>
+    <div class="desc">Participação dos tipos de leitura no histórico filtrado. Registros sem formato/plataforma preenchido são classificados como livros físicos, conforme regra validada pela usuária.</div>
+    <div class="chart" id="cFormatShare"></div>
+    <div class="smallnote">Regra validada: campo de formato/plataforma vazio corresponde a livro físico.</div>
+  </div>
+  <div class="card">
+    <h3>Situação atual dos itens do histórico</h3>
+    <div class="desc">Distribuição dos registros entre Estante, Emprestado, Biblioteca, Doado, A venda, Sumiu e Vendido, conforme a base.</div>
+    <div class="chart" id="cHistStatus"></div>
+  </div>
+</div>
+
+
+<div class="section-title">Métricas da estante <span>detalhamento dos livros cadastrados</span></div>
+<div class="metric-grid">
+  <div class="card">
+    <h3>Status de leitura na estante — comparação</h3>
+    <div class="desc">Mostra a distribuição de status; quando um status é filtrado, o gráfico compara o status selecionado com os demais.</div>
+    <div class="chart" id="cStatus"></div>
+  </div>
+  <div class="card">
+    <h3>Autores presentes na estante</h3>
+    <div class="desc">Top 10 autores entre os livros que correspondem aos filtros da estante.</div>
+    <div class="chart" id="cAuthors"></div>
+  </div>
+  <div class="card">
+    <h3>Editoras presentes na estante</h3>
+    <div class="desc">Top 10 editoras informadas entre os livros filtrados.</div>
+    <div class="chart" id="cPublishers"></div>
+  </div>
+  <div class="card">
+    <h3>Livros por ano de compra</h3>
+    <div class="desc">Somente registros com ano de compra informado.</div>
+    <div class="chart" id="cPurchases"></div>
+  </div>
+  <div class="card">
+    <h3>Livros adquiridos × leituras realizadas por ano</h3>
+    <div class="desc">Compara duas métricas independentes no mesmo ano: quantidade de livros adquiridos e quantidade de leituras registradas. A leitura não precisa corresponder a um livro comprado naquele mesmo ano.</div>
+    <div class="chart" id="cRate"></div>
+    <div class="smallnote">Exemplo: em 2026 há 76 aquisições registradas e 28 leituras; essas 28 leituras podem incluir livros comprados em outros anos.</div>
+  </div>
+
+  <div class="card">
+    <h3>Ano de compra × ano de leitura</h3>
+    <div class="desc">Comparação entre correspondências exatas e correspondências validadas manualmente na conciliação, sempre com ano de compra e ano de leitura informados.</div>
+    <div class="chart" id="cPurchaseReadLag"></div>
+    <div class="comparison-note" id="purchaseReadMatchNote">
+      O cálculo usa apenas correspondências seguras com os dois anos informados. Como a compra possui apenas o ano, e não a data completa, o resultado indica diferença aproximada em anos — não o tempo exato até a leitura.
+    </div>
+  </div>
+
+</div>
+
+<div class="section-title">Métricas do histórico de leituras <span>detalhamento dos registros históricos</span></div>
+<div class="metric-grid">
+  <div class="card">
+    <h3 id="readEvolutionTitle">Evolução das leituras por ano</h3>
+    <div class="desc" id="readEvolutionDesc">Quantidade de registros de leitura por ano dentro dos filtros do histórico.</div>
+    <div class="chart" id="cReadYear"></div>
+  </div>
+  <div class="card">
+    <h3>Pessoas que emprestaram livros</h3>
+    <div class="desc">Pessoa que emprestou o livro para a leitora, quando informada.</div>
+    <div class="chart" id="cLoaners"></div>
+  </div>
+  <div class="card">
+    <h3>Origens e instituições das leituras</h3>
+    <div class="desc">Bibliotecas e instituições explicitamente registradas no histórico.</div>
+    <div class="chart" id="cOrigins"></div>
+  </div>
+</div>
+
+<div class="detail-divider"></div>
+<div class="section-title">Lista completa da estante <span>todos os livros cadastrados</span></div>
+<div class="result-card" style="margin-bottom:16px">
+  <div class="result-head">
+    <div>
+      <h3>Todos os livros da estante atual</h3>
+      <div class="desc">Lista fixa da estante, independente dos filtros.</div>
+    </div>
+    <div class="result-count" id="allCollectionCount"></div>
+  </div>
+  <div class="table-wrap" id="allCollectionResults"></div>
+</div>
+
+<div class="section-title">Lista completa do histórico de leituras <span>todos os registros históricos</span></div>
+<div class="result-card" style="margin-bottom:16px">
+  <div class="result-head">
+    <div>
+      <h3>Todos os registros do histórico de leituras</h3>
+      <div class="desc">Lista fixa do histórico, independente dos filtros.</div>
+    </div>
+    <div class="result-count" id="allHistoryCount"></div>
+  </div>
+  <div class="table-wrap" id="allHistoryResults"></div>
+</div>
+
+<div class="method"><strong>Qualidade dos dados:</strong> 149 livros não possuem ano de compra; 93 não possuem editora; 1 registro do histórico não possui data. Uma mesma obra pode aparecer em mais de uma edição. Valores ausentes não foram completados por inferência.<br><strong>Conciliação:</strong> 41 pares foram revisados manualmente; 33 foram tratados como a mesma obra e 8 foram descartados como correspondência.</div>
+</div>
+<div class="tooltip" id="tip"></div><footer>Etapa 8 - Dashboard executivo | Projeto Biblioteca Inteligente com IA</footer>
+<script>
+const DATA={"collection":[{"Nome":"1984","Autor":"George Orwell","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Sim"},{"Nome":"Coração das Trevas","Autor":"Joseph Conrad","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Abandonado"},{"Nome":"Contos do Grotesco e do Arabesco","Autor":"Edgar Allan Poe","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Abandonado"},{"Nome":"Don Juan","Autor":"Lord Byron","Editora":"Clube de Literatura Clássica","ISBN":"978-658-7036-75-5","Ano-Compra":2023,"Lido":"Não"},{"Nome":"O Finado Mattia Pascal","Autor":"Luigi Pirandello","Editora":"Clube de Literatura Clássica","ISBN":"978-65-87036-76-2","Ano-Compra":2023,"Lido":"Não"},{"Nome":"A Conciência de Zeno","Autor":"Italo Svevo","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Fábulas de Esopo","Autor":"Esopo","Editora":"Clube de Literatura Clássica","ISBN":"978-65-87036-88-5","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Ilusões Perdidas","Autor":"Honoré de Balzac","Editora":"Clube de Literatura Clássica","ISBN":"978-65-87036-74-8","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Jerusalem Libertada","Autor":"Torquato Tasso","Editora":"Clube de Literatura Clássica","ISBN":"978-65-87036-33-5","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Saga de Njall","Autor":"Anônimo","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Um Diário do Ano da Peste","Autor":"Daniel Defoe","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Madame Bovary","Autor":"Gustave Flaubert","Editora":"Clube de Literatura Clássica","ISBN":"978-65-87036-71-7","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Os Trabalhadores do Mar","Autor":"Victor Hugo","Editora":"Clube de Literatura Clássica","ISBN":"978-65-87036-38-0","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Crime e Castigo","Autor":"Fiódor Dostoiévski","Editora":"Clube de Literatura Clássica","ISBN":"978-65-87036-14-4","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Irmãos Karamazov","Autor":"Fiódor Dostoiévski","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Pais e Filhos","Autor":"Ivan Turguêniev","Editora":"Clube de Literatura Clássica","ISBN":"978-65-87036-82-3","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Memorias Póstumas de Brás Cubas","Autor":"Machado de Assis","Editora":"Clube de Literatura Clássica","ISBN":"978-65-87036-64-9","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Dom Casmurro","Autor":"Machado de Assis","Editora":"Clube de Literatura Clássica","ISBN":"978-65-87036-03-8","Ano-Compra":2023,"Lido":"Sim"},{"Nome":"Caetés","Autor":"Graciliano Ramos","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"São Bernardo","Autor":"Graciliano Ramos","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Angústia*","Autor":"Graciliano Ramos","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Vidas Secas","Autor":"Graciliano Ramos","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Sim"},{"Nome":"Viagem ao Redor do meu Quarto","Autor":"Xavier de Maistre","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Contos do Casmurro","Autor":"Machado de Assis","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Saga de Gunnlaugr Lingua-de-Serpente","Autor":"Anônimo","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Vida de Esopo","Autor":"Anônimo","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"A Conciência de Svevo","Autor":"Italo Svevo","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Diário de um Homem Superfluo","Autor":"Ivan Turguêniev","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"A fazenda dos Animais","Autor":"George Orwell","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Sim"},{"Nome":"Torquato Tasso","Autor":"Johann Wolfgang von Goethe","Editora":"Clube de Literatura Clássica","ISBN":"978-65-87036-34-2","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Três contos","Autor":"Gustave Flaubert","Editora":"Clube de Literatura Clássica","ISBN":"978-65-87036-72-4","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Eureka","Autor":"Edgar Allan Poe","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"O Último Dia de um Condenado","Autor":"Victor Hugo","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"A Peste Escarlate","Autor":"Jack London","Editora":"Clube de Literatura Clássica","ISBN":"978-65-87036-26-7","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Seis Personagens em Busca de um Autor","Autor":"Luigi Pirandello","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Cadernos do Subterraneo","Autor":"Fiódor Dostoiévski","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Juventude","Autor":"Joseph Conrad","Editora":"Clube de Literatura Clássica","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Auto da Barca do Inferno","Autor":"Gil Vicente","Editora":"L&PM","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"O Caçador de Pipas","Autor":"Khaled Hosseini","Editora":"Nova Fronteira","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"O Livro dos Cinco Aneis","Autor":"Miyamoto Musashi","Editora":"Pé da Letra","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"A Biblioteca da Meia Noite","Autor":"Matt Haig","Editora":"Bertrand Brasil","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Os três Maridos de Evelyn Hugo","Autor":"Taylor Jenkins Reid","Editora":"Paralela","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Dasy Jones and The Six","Autor":"Taylor Jenkins Reid","Editora":"Paralela","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"O Deus e o Imperador","Autor":"Sam Meekings","Editora":"Argumento","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Verity","Autor":"Colleen Hoover","Editora":"Galera Record","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Os Dois Morrem no Final","Autor":"Adam Silvera","Editora":"Intrinseca","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Marley e Eu","Autor":"John Grogan","Editora":"Pockt Ouro","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Grande Sertão: Veredas","Autor":"João Guimarães Rosa","Editora":"Companhia das Letras","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Os Sertões","Autor":"Euclides da Cunha","Editora":"Principis","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Angustia*","Autor":"Graciliano Ramos","Editora":"Record","ISBN":"","Ano-Compra":null,"Lido":"Abandonado"},{"Nome":"A Hora da Estrela","Autor":"Clarice Lispector","Editora":"Rocco","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"O Meu Pé de Laranja Lima","Autor":"José Mauro de Vasconcelos","Editora":"Melhoramentos","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Tudo é Rio","Autor":"Carla Madeira","Editora":"Record","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Eu Receberia as Piores Notícias dos Seus Lindos Lábios","Autor":"Marçal Aquino","Editora":"Companhia das Letras","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Onze Minutos","Autor":"Paulo Coelho","Editora":"Paralela","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"O Alquimista","Autor":"Paulo Coelho","Editora":"Planeta","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Batalhas de Um Pracinha","Autor":"Antonio Walter Santim","Editora":"Edição do Autor","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Projeto Nacional: O Dever da Esperança","Autor":"Ciro Gomes","Editora":"Leya","ISBN":"","Ano-Compra":2020,"Lido":"Não"},{"Nome":"Livro do Desassossego","Autor":"Fernando Pessoa","Editora":"Principis","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"O Alienista","Autor":"Machado de Assis","Editora":"Principis","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Memorias de uma costureira","Autor":"Teresinha de Jesus Almeida","Editora":"Edição do Autor","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Trilogia dos Espinhos - Prince of Thorns**","Autor":"Mark Lawrence","Editora":"Darkside","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Trilogia dos Espinhos - King of Thorns","Autor":"Mark Lawrence","Editora":"Darkside","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Trilogia dos Espinhos - Emperor of Thorns","Autor":"Mark Lawrence","Editora":"Darkside","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"O Médico e o Monstro e Outros Experimentos*","Autor":"Robert Louis Stevenson","Editora":"Darkside","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Frankenstein","Autor":"Mary Shelley","Editora":"Darkside","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Morro dos Ventos Uivantes","Autor":"Emily Brontë","Editora":"Darkside","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Drácula","Autor":"Bram Stoker","Editora":"Darkside","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Carmilla","Autor":"J. Sheridan Le Fanu","Editora":"Pandorga","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Nobreza de Sangue","Autor":"Michael Sanches","Editora":"Pandorga","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"O Labirinto do Fauno","Autor":"Guillermo del Toro e Cornelia Funke","Editora":"Intrinseca","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"O Casal que Mora ao Lado","Autor":"Shari Lapena","Editora":"Record","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"A Paciente Silenciosa","Autor":"Alex Michaelides","Editora":"Record","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Morte Súbita","Autor":"J. K. Rowling","Editora":"Grua Livros","ISBN":"","Ano-Compra":null,"Lido":"Abandonado"},{"Nome":"O Cão dos Barkerville","Autor":"Arthur Conan Doyle","Editora":"Record","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Vampiratas - Demonios do Oceano**","Autor":"Justin Somper","Editora":"Galera","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Vampiratas - Mar de Terror","Autor":"Justin Somper","Editora":"Galera","ISBN":"","Ano-Compra":null,"Lido":"Abandonado"},{"Nome":"Vampiratas - Coração Negro","Autor":"Justin Somper","Editora":"Galera","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Vampiratas - Capitão de Sangue","Autor":"Justin Somper","Editora":"Galera","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Vampiratas - Demonios del Oceano","Autor":"Justin Somper","Editora":"Montena","ISBN":"","Ano-Compra":2015,"Lido":"Sim"},{"Nome":"Vampiratas - Una Ola de Terror","Autor":"Justin Somper","Editora":"Montena","ISBN":"","Ano-Compra":2015,"Lido":"Não"},{"Nome":"O Médico e o Monstro ** *","Autor":"Robert Louis Stevenson","Editora":"Principis","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Lendas Japonesas","Autor":"Yei Theodora Ozaki","Editora":"Darkside","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Jane Eyre","Autor":"Charlotte Brontë","Editora":"Zahar","ISBN":"","Ano-Compra":2019,"Lido":"Sim"},{"Nome":"Moby Dick","Autor":"Herman Melville","Editora":"Zahar","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Persuasão","Autor":"Jane Austen","Editora":"Zahar","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"O Corcunda de Notre Dame","Autor":"Victor Hugo","Editora":"Zahar","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Shirley","Autor":"Charlotte Brontë","Editora":"Martin Claret","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Emma","Autor":"Jane Austen","Editora":"Martin Claret","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Os Miseráveis","Autor":"Victor Hugo","Editora":"Martin Claret","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"O Conde de Monte Cristo","Autor":"Alexandre Dumas","Editora":"Martin Claret","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Hamlet","Autor":"William Shakespeare","Editora":"Martin Claret","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"A letra Escarlate","Autor":"Nathaniel Hawthorne","Editora":"Martin Claret","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"O Homem que Calculava","Autor":"Malba Tahan","Editora":"Record","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Os sofrimentos do Jovem Werther","Autor":"Johann Wolfgang von Goethe","Editora":"Penguin e Companhia","ISBN":"","Ano-Compra":2025,"Lido":"Não"},{"Nome":"A mulher de trinta anos","Autor":"Honoré de Balzac","Editora":"Penguin e Companhia","ISBN":"","Ano-Compra":2025,"Lido":"Sim"},{"Nome":"Dom Quixote - Tomo 1","Autor":"Miguel de Cervantes","Editora":"Penguin e Companhia","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Dom Quixote - Tomo 2","Autor":"Miguel de Cervantes","Editora":"Penguin e Companhia","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Macbeth","Autor":"William Shakespeare","Editora":"Pé da Letra","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Caninos Brancos","Autor":"Jack London","Editora":"Pé da Letra","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"A Metamorfose","Autor":"Franz Kafka","Editora":"Principis","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"O Processo","Autor":"Franz Kafka","Editora":"Principis","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"O Castelo","Autor":"Franz Kafka","Editora":"Principis","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Assim Falou Zaratrusta","Autor":"Friedrich Nietzsche","Editora":"Companhia das Letras","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Senhor das Moscas","Autor":"William Golding","Editora":"Alfaguara","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"O Velho e o Mar","Autor":"Ernest Hemingway","Editora":"Bertrand Brasil","ISBN":"","Ano-Compra":2025,"Lido":"Sim"},{"Nome":"O Sol é para Todos","Autor":"Harper Lee","Editora":"José Olympio","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Mrs Dalloway","Autor":"Virginia Woolf","Editora":"Lafonte","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"O menino do Pijama Lsitrado","Autor":"John Boyne","Editora":"Seguinte","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Percy Jackson e os Olimpianos - O Ladrão de Raios**","Autor":"Rick Riordan","Editora":"Intrinseca","ISBN":"","Ano-Compra":2018,"Lido":"Sim"},{"Nome":"Percy Jackson e os Olimpianos - Mar de Monstros**","Autor":"Rick Riordan","Editora":"Intrinseca","ISBN":"","Ano-Compra":2018,"Lido":"Sim"},{"Nome":"Percy Jackson e os Olimpianos - A Maldição do Titã**","Autor":"Rick Riordan","Editora":"Intrinseca","ISBN":"","Ano-Compra":2018,"Lido":"Sim"},{"Nome":"Percy Jackson e os Olimpianos - A Batalha no Labirinto**","Autor":"Rick Riordan","Editora":"Intrinseca","ISBN":"","Ano-Compra":2018,"Lido":"Sim"},{"Nome":"Percy Jackson e os Olimpianos - O Último Olimpiano","Autor":"Rick Riordan","Editora":"Intrinseca","ISBN":"","Ano-Compra":2018,"Lido":"Sim"},{"Nome":"Os Heróis do Olimpo - O Herói Perdido","Autor":"Rick Riordan","Editora":"Intrinseca","ISBN":"","Ano-Compra":2018,"Lido":"Sim"},{"Nome":"Os Heróis do Olimpo - O Filho de Netuno","Autor":"Rick Riordan","Editora":"Intrinseca","ISBN":"","Ano-Compra":2018,"Lido":"Sim"},{"Nome":"Os Heróis do Olimpo - O Sangue do Olimpo","Autor":"Rick Riordan","Editora":"Intrinseca","ISBN":"","Ano-Compra":2018,"Lido":"Sim"},{"Nome":"Os Heróis do Olimpo - A Marca de Atena","Autor":"Rick Riordan","Editora":"Intrinseca","ISBN":"","Ano-Compra":2018,"Lido":"Sim"},{"Nome":"Os Heróis do Olimpo - A Casa de Hades - sumiu","Autor":"Rick Riordan","Editora":"Intrinseca","ISBN":"","Ano-Compra":2018,"Lido":"Sim"},{"Nome":"Fronteiras do Universo - A Faca Sutil","Autor":"Philip Pullman","Editora":"Suma","ISBN":"","Ano-Compra":2020,"Lido":"Sim"},{"Nome":"Fronteiras do Universo - A Luneta Ambar","Autor":"Philip Pullman","Editora":"Suma","ISBN":"","Ano-Compra":2020,"Lido":"Sim"},{"Nome":"A Crônica do Matador de Rei -  O Nome do Vento","Autor":"Patrick Rothfuss","Editora":"Arqueiro","ISBN":"","Ano-Compra":2023,"Lido":"Relendo"},{"Nome":"A Crônica do Matador de Rei - O Temor do Sábio","Autor":"Patrick Rothfuss","Editora":"Arqueiro","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"A Crônica do Matador de Rei - A Música do Silêncio","Autor":"Patrick Rothfuss","Editora":"Arqueiro","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"A Crônica do Matador de Rei - O Estreito Caminho entre Desejos","Autor":"Patrick Rothfuss","Editora":"Arqueiro","ISBN":"","Ano-Compra":2024,"Lido":"Não"},{"Nome":"Rainha do Crime - O Mistério dos Sete Relógios","Autor":"Agatha Christie","Editora":"Harper Collins","ISBN":"","Ano-Compra":2022,"Lido":"Sim"},{"Nome":"Rainha do Crime - Crimes ABC","Autor":"Agatha Christie","Editora":"Harper Collins","ISBN":"","Ano-Compra":2022,"Lido":"Não"},{"Nome":"Rainha do Crime - Os Trabalhos de Hércules","Autor":"Agatha Christie","Editora":"Harper Collins","ISBN":"","Ano-Compra":2022,"Lido":"Não"},{"Nome":"Rainha do Crime - A Maldicão do Espelho","Autor":"Agatha Christie","Editora":"Harper Collins","ISBN":"","Ano-Compra":2022,"Lido":"Não"},{"Nome":"Rainha do Crime - Cem Gramas de Centeio","Autor":"Agatha Christie","Editora":"Harper Collins","ISBN":"","Ano-Compra":2022,"Lido":"Sim"},{"Nome":"Rainha do Crime - Nêmesis","Autor":"Agatha Christie","Editora":"Harper Collins","ISBN":"","Ano-Compra":2022,"Lido":"Não"},{"Nome":"Rainha do Crime - E Não Sobrou Nenhum","Autor":"Agatha Christie","Editora":"Globo","ISBN":"","Ano-Compra":2022,"Lido":"Sim"},{"Nome":"A Guerra da Papoula 1","Autor":"R. F. Kuang","Editora":"Intrinseca","ISBN":"","Ano-Compra":2024,"Lido":"Não"},{"Nome":"A Guerra da Papoula 2 -  A republica do Dragão","Autor":"R. F. Kuang","Editora":"Intrinseca","ISBN":"","Ano-Compra":2024,"Lido":"Não"},{"Nome":"A Guerra da Papoula 3 - A Deusa em Chamas","Autor":"R. F. Kuang","Editora":"Intrinseca","ISBN":"","Ano-Compra":2024,"Lido":"Não"},{"Nome":"Millenium - Os Homens que não Amavam as Mulheres **","Autor":"Stieg Larsson","Editora":"Companhia das Letras","ISBN":"","Ano-Compra":2022,"Lido":"Não"},{"Nome":"Millenium - A Menina que Brincava com Fogo **","Autor":"Stieg Larsson","Editora":"Companhia das Letras","ISBN":"","Ano-Compra":2022,"Lido":"Não"},{"Nome":"O Cemitério dos Livros Esquecidos - A Sombra do Vento","Autor":"Carlos Ruiz Zafón","Editora":"Suma","ISBN":"","Ano-Compra":2024,"Lido":"Sim"},{"Nome":"Ciclo de Avalon - Ancestrais de Avalon","Autor":"Marion Zimmer Bradley e Diana L. Paxson","Editora":"Planeta Minotauro","ISBN":"","Ano-Compra":2025,"Lido":"Sim"},{"Nome":"Ciclo de Avalon - Os Corvos de Avalon","Autor":"Marion Zimmer Bradley e Diana L. Paxson","Editora":"Planeta Minotauro","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Ciclo de Avalon - A casa da Floresta","Autor":"Marion Zimmer Bradley","Editora":"Planeta Minotauro","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Ciclo de Avalon - A espada de Avalon","Autor":"Marion Zimmer Bradley e Diana L. Paxson","Editora":"Planeta Minotauro","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Ciclo de Avalon - A Senhora de Avalon","Autor":"Marion Zimmer Bradley e Diana L. Paxson","Editora":"Rocco","ISBN":"","Ano-Compra":2024,"Lido":"Não"},{"Nome":"Anne de GreenGables","Autor":"L. M. Montgomery","Editora":"Principis","ISBN":"","Ano-Compra":2023,"Lido":"Não"},{"Nome":"Rangers Ordem dos Arqueiros - Livro 6 **","Autor":"John Flanagan","Editora":"Fundamentos","ISBN":"","Ano-Compra":2022,"Lido":"Não"},{"Nome":"Ps Eu te Amo","Autor":"Cecelia Ahern","Editora":"Harper Collins","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"O Menino que Descobriu o Vento","Autor":"William Kamkwamba e Bryan Mealer","Editora":"Principis","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"O Guia do Mochileiro das Galáxias","Autor":"Douglas Adams","Editora":"","ISBN":"","Ano-Compra":2020,"Lido":"Sim"},{"Nome":"O Restaurante no Fim do Mundo","Autor":"Douglas Adams","Editora":"","ISBN":"","Ano-Compra":2020,"Lido":"Não"},{"Nome":"A Vida, o Universo e Tudo Mais","Autor":"Douglas Adams","Editora":"","ISBN":"","Ano-Compra":2020,"Lido":"Não"},{"Nome":"Até Mais, e Obrigada Pelos Peixes","Autor":"Douglas Adams","Editora":"","ISBN":"","Ano-Compra":2020,"Lido":"Não"},{"Nome":"Praticamente Inofensiva","Autor":"Douglas Adams","Editora":"","ISBN":"","Ano-Compra":2020,"Lido":"Não"},{"Nome":"Hainish Cycle - A Mão Esquerda da Escuridão","Autor":"Ursula K. Le Guin","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Hainish Cycle - Os Despossuídos","Autor":"Ursula K. Le Guin","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"O Conto da Aia","Autor":"Margaret Atwood","Editora":"","ISBN":"","Ano-Compra":2019,"Lido":"Sim"},{"Nome":"O Conto da Aia - Os Testamentos","Autor":"Margaret Atwood","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Jogos Vorazes - A Cantiga dos Pássaros e das Serpentes","Autor":"Suzanne Collins","Editora":"","ISBN":"","Ano-Compra":2024,"Lido":"Sim"},{"Nome":"Jogos Vorazes - Amanhecer na Colheita","Autor":"Suzanne Collins","Editora":"","ISBN":"","Ano-Compra":2025,"Lido":"Sim"},{"Nome":"Jogos Vorazes - Juegos del Hambre","Autor":"Suzanne Collins","Editora":"","ISBN":"","Ano-Compra":2015,"Lido":"Não"},{"Nome":"Battle Royale","Autor":"Koushun Takami","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Admirável Mundo Novo","Autor":"Aldous Huxley","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Fahrenheit 451","Autor":"Ray Bradbury","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Maus","Autor":"Art Spiegelman","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Cobra Kai : A Saga Karatê Kid Continua: A História de Johnny","Autor":"Denton J. Tipton","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Terra-média - O Hobbit - Em quadrinhos","Autor":"J. R. R. Tolkien","Editora":"","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Sapiens - O Nascimento da Humanidade","Autor":"Yuval Noah Harari","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Sapiens - Os Pilares da Civilização","Autor":"Yuval Noah Harari","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Nana 1","Autor":"Ai Yazawa","Editora":"","ISBN":"","Ano-Compra":2025,"Lido":"Não"},{"Nome":"Nana 2","Autor":"Ai Yazawa","Editora":"","ISBN":"","Ano-Compra":2025,"Lido":"Não"},{"Nome":"Nana 3","Autor":"Ai Yazawa","Editora":"","ISBN":"","Ano-Compra":2025,"Lido":"Não"},{"Nome":"Nana 4","Autor":"Ai Yazawa","Editora":"","ISBN":"","Ano-Compra":2025,"Lido":"Não"},{"Nome":"Nana 5","Autor":"Ai Yazawa","Editora":"","ISBN":"","Ano-Compra":2025,"Lido":"Não"},{"Nome":"Livro das Mil e Uma Noites - Ramo Sírio - 1","Autor":"Mamede Mustafa Jarouche","Editora":"Biblioteca Azul","ISBN":"","Ano-Compra":2025,"Lido":"Lendo"},{"Nome":"Livro das Mil e Uma Noites - Ramo Sírio - 2","Autor":"Mamede Mustafa Jarouche","Editora":"Biblioteca Azul","ISBN":"","Ano-Compra":2025,"Lido":"Não"},{"Nome":"Livro das Mil e Uma Noites - Ramo Egípcio - 3","Autor":"Mamede Mustafa Jarouche","Editora":"Biblioteca Azul","ISBN":"","Ano-Compra":2025,"Lido":"Não"},{"Nome":"Livro das Mil e Uma Noites - Ramo Egípcio - 4","Autor":"Mamede Mustafa Jarouche","Editora":"Biblioteca Azul","ISBN":"","Ano-Compra":2025,"Lido":"Não"},{"Nome":"Livro das Mil e Uma Noites - Ramo Egípcio - 5","Autor":"Mamede Mustafa Jarouche","Editora":"Biblioteca Azul","ISBN":"","Ano-Compra":2025,"Lido":"Não"},{"Nome":"Arvore e Folha","Autor":"J. R. R. Tolkien","Editora":"Harper Collins","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"A Batalha de Maldom","Autor":"J. R. R. Tolkien","Editora":"Harper Collins","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Terra-média - O Silmarillion","Autor":"J. R. R. Tolkien","Editora":"Harper Collins","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Terra-média -  Beren e Luthien","Autor":"J. R. R. Tolkien","Editora":"Harper Collins","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Terra-média -  Os Filhos de Hurin","Autor":"J. R. R. Tolkien","Editora":"Harper Collins","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Terra-média - A Queda de Gondolim","Autor":"J. R. R. Tolkien","Editora":"Harper Collins","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Terra-média - A Queda de Numenor","Autor":"J. R. R. Tolkien","Editora":"Harper Collins","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Terra-média - O Hobbit **","Autor":"J. R. R. Tolkien","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Terra-média - Senhor dos Anéis - A Sociedade do Anel **","Autor":"J. R. R. Tolkien","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Terra-média - Senhor dos Anéis - As Duas Torres **","Autor":"J. R. R. Tolkien","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Terra-média - Senhor dos Anéis - O Retorn do Rei **","Autor":"J. R. R. Tolkien","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Harry Potter 1 - e a Pedra Filosofal - dobradura","Autor":"J. K. Rowling","Editora":"MinaLima","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Harry Potter 2 - e a Camara Secreta - dobradura","Autor":"J. K. Rowling","Editora":"MinaLima","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Harry Potter 3 - e o Prisioneiro de Askaban - dobradura","Autor":"J. K. Rowling","Editora":"MinaLima","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Harry Potter - Os Contos de Beedle o Bardo - ilustrado","Autor":"J. K. Rowling","Editora":"Rocco","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Harry Potter -  Animais Fantásticos e Onde Habitam - ilustrado","Autor":"J. K. Rowling","Editora":"Rocco","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Harry Potter - Natal em Hogwarts - ilustrado","Autor":"J. K. Rowling","Editora":"Rocco","ISBN":"","Ano-Compra":2024,"Lido":"Sim"},{"Nome":"Harry Potter 1 - e a Pedra Filosofal - ilustrado","Autor":"J. K. Rowling","Editora":"Jim Kay","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Harry Potter 2 - e a Camara Secreta - ilustrado","Autor":"J. K. Rowling","Editora":"Jim Kay","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Harry Potter 3 - e o Prisioneiro de Askaban - ilustrado","Autor":"J. K. Rowling","Editora":"Jim Kay","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Harry Potter 1 - e a Pedra Filosofal","Autor":"J. K. Rowling","Editora":"Rocco","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"Harry Potter 2 - e a Câmara Secreta","Autor":"J. K. Rowling","Editora":"Rocco","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"Harry Potter 3 - e o Prisioneiro de Askaban","Autor":"J. K. Rowling","Editora":"Rocco","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"Harry Potter 4 - e o Cálice de Fogo","Autor":"J. K. Rowling","Editora":"Rocco","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"Harry Potter 5 - e a Ordem da Fênix","Autor":"J. K. Rowling","Editora":"Rocco","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"Harry Potter 6 - e o Principe Mestiço","Autor":"J. K. Rowling","Editora":"Rocco","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"Harry Potter 7 - e as Relíquias da Morte","Autor":"J. K. Rowling","Editora":"Rocco","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"Mundo de Tinta 3 - Morte de Tinta","Autor":"Cornelia Funke","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Mundo de Tinta 4 - A cor da Vingança","Autor":"Cornelia Funke","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"A Sétima Ordem","Autor":"Michelly Gassmann","Editora":"Literare Books Internacional","ISBN":"","Ano-Compra":null,"Lido":"Lendo"},{"Nome":"Ponte Para Terabítia","Autor":"Katherine Paterson","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"O Garoto do Riquixá","Autor":"Lao She","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Viagem ao Centro da Terra","Autor":"Jules Verne","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Vinte Mil Léguas Submarinas","Autor":"Jules Verne","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Oliver Twist","Autor":"Charles Dickens","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Robin Hood","Autor":"Howard Pyle","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Abandonado"},{"Nome":"Phantastes","Autor":"George MacDonald","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"A Princesa e o Goblin","Autor":"George MacDonald","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"As Lendas do Rei Arthur e seus Cavaleiros","Autor":"James Knowles","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Os Três Mosqueteiros","Autor":"Alexandre Dumas","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"O Jardim Secreto","Autor":"Frances Hodgson Burnett","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"A Princesinha","Autor":"Frances Hodgson Burnett","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Pollyanna","Autor":"Eleanor H. Porter","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Pollyanna moça","Autor":"Eleanor H. Porter","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Abandonado"},{"Nome":"O Maravilhoso Mágico de Oz","Autor":"L. Frank Baum","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"As Aventuras de Pinoquio","Autor":"Carlo Collodi","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"O Pequeno Principe","Autor":"Antoine de Saint-Exupéry","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Malala: a Menina que Queria ir para a Escola","Autor":"Adriana Carranca","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"O Menino do Dedo Verde","Autor":"Maurice Druon","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Por Causa de Você, Mãe","Autor":"Kobi Yamada","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"O Ickabog","Autor":"J. K. Rowling","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Alice no Páis das Maravilhas","Autor":"Lewis Carroll","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Alice Através do Espelho","Autor":"Lewis Carroll","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Matilda","Autor":"Roald Dahl","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"As Bruxas","Autor":"Roald Dahl","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"A Fantástica Fábrica de Chocolate","Autor":"Roald Dahl","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Fantástico Senhor Raposo","Autor":"Roald Dahl","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"O Cisne e o Trompete","Autor":"E. B. White","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Stuart Little","Autor":"E. B. White","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"A Teia de Charlotte","Autor":"E. B. White","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Ferreiro do Bosque Maior","Autor":"J. R. R. Tolkien","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Mestre Giles d'Aldeia","Autor":"J. R. R. Tolkien","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Roverando","Autor":"J. R. R. Tolkien","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Carta Errante, Avó Atrapalhada, Menina Aniversariante","Autor":"Mirna Pinsky","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Amanhã","Autor":"Lúcia Hiratsuka","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"O Menino Marrom","Autor":"Ziraldo","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"A Arvore em Mim","Autor":"Corinna Luyken","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Amiga Ursa","Autor":"Rita Lee","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Tudo bem Não ser Normal - O menino que se Alimentava de Pesadelos","Autor":"Jo Yong; Jam San","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Tudo bem Não ser Normal - Criança Zumbi","Autor":"Jo Yong; Jam San","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Tudo bem Não ser Normal - A Mão e o Tamboril","Autor":"Jo Yong; Jam San","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Tudo bem Não ser Normal - O Cão Alegre","Autor":"Jo Yong; Jam San","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Tudo bem Não ser Normal - Em Busca da Feição Real","Autor":"Jo Yong; Jam San","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"A Montanha do Poder","Autor":"Patrícia Engel Secco","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Pela Porta do Coração","Autor":"Regina Coeli Rennó","Editora":"FDT","ISBN":"85-322-2367-2","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Turma da Onça Pintada -  Cadê o Rodolfo?","Autor":"Anônimo","Editora":"Oca","ISBN":"978-65-86962-10-9","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Turma da Onça Pintada -  Romeu foi Clonado?","Autor":"Anônimo","Editora":"Oca","ISBN":"978-65-86962-09-3","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Turma da Onça Pintada - Uma Nova Amizade","Autor":"Anônimo","Editora":"Oca","ISBN":"978-65-86962-09-3","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Turma da Onça Pintada - A grande corrida","Autor":"Anônimo","Editora":"Oca","ISBN":"978-65-86962-10-9","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Turma da Onça Pintada - Festa na Floresta","Autor":"Anônimo","Editora":"Oca","ISBN":"978-65-86962-10-9","Ano-Compra":null,"Lido":"Sim"},{"Nome":"The Next-Door Dogs","Autor":"Rodowsky/Bates","Editora":"FSG","ISBN":"978-0-374-36410-6","Ano-Compra":null,"Lido":"Não"},{"Nome":"Moby Dick Adaptado - Bilingue","Autor":"Herman Melville","Editora":"Pé da Letra","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"O Poder dos Quietos","Autor":"Herman Melville","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Abandonado"},{"Nome":"Mentes Consumistas","Autor":"Ana Beatriz Barbosa Silva","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"A Morte é um Dia que se Vale a Pena Viver","Autor":"Ana Claudia Quintana Arantes","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Ventosaterapia","Autor":"Antonio Augusto Cunha","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Helena Blavatsky","Autor":"Silvia Cranston","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"A Voz do Silêncio","Autor":"Helena P. Blavatsky","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Porque Ética é mais Importante do que a Religião","Autor":"Dalai Lama","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Fernão Capelo Gaivota","Autor":"Richard Bach","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"O Livro Egipcio dos Mortos","Autor":"Anônimo","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"O Livro do Caminho e da Virtude","Autor":"Lao-Tsé","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Introdução ao Budismo","Autor":"Geshe Kelsang Gyatso","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"O Principío do Relógio de Sol","Autor":"Masanobu Taniguchi","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Não"},{"Nome":"Crônicas da Galileia: Histórias do Tempo de Jesus","Autor":"Carlos Henrique; psicografia de Angelo Dias","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Fonte Viva","Autor":"Francisco Cândido Xavier; Emmanuel","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Abandonado"},{"Nome":"Evangelho Segundo o Espiritismo","Autor":"Allan Kardec","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Abandonado"},{"Nome":"Dias Melhores","Autor":"Irmão José; psicografia de Carlos A. Baccelli","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Abandonado"},{"Nome":"Minutos de Sabedoria","Autor":"C. Torres Pastorino","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Abandonado"},{"Nome":"Sutra Sagrada","Autor":"Masaharu Taniguchi","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Biblia Sagrada","Autor":"Anônimo","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Abandonado"},{"Nome":"Shinsokan e outras oraçõe","Autor":"Masaharu Taniguchi","Editora":"","ISBN":"","Ano-Compra":null,"Lido":"Sim"},{"Nome":"Cem Anos de Solidão","Autor":"Gabriel Garcia Marquez","Editora":"Record","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"O Castelo Animado","Autor":"Diana Wynne Jones","Editora":"Galera","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"O Castelo Animado - O Castelo no Ar","Autor":"Diana Wynne Jones","Editora":"Galera","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"O Castelo Animado - A casa dos muitos caminhos","Autor":"Diana Wynne Jones","Editora":"Galera","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Alchemised","Autor":"SenLinYu","Editora":"Intrinseca","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"As vinhas da Ira","Autor":"John Steinbeck","Editora":"Record","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Velas Escarlates: conto feérico","Autor":"Aleksandr Grin","Editora":"Principis","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Cartas ao Papa Noel","Autor":"J. R. R. Tolkien","Editora":"Harper Collins","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Hamnet","Autor":"Maggie O'Farrell","Editora":"Intrinseca","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Ainda Estou Aqui","Autor":"Marcelo Rubens Paiva","Editora":"Alfaguara","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"A Montanha Mágica","Autor":"Thomas Mann","Editora":"Penguin e Companhia","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"O Povo do Ar 1 - O Principe Cruel","Autor":"Holly Black","Editora":"Galera","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"O Povo do Ar 2 - O Rei Perverso","Autor":"Holly Black","Editora":"Galera","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"O Povo do Ar 3 - A Rainha do Nada","Autor":"Holly Black","Editora":"Galera","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"O Povo do Ar Spin Off 3 - O Canto Mais Escuro da Floresta","Autor":"Holly Black","Editora":"Galera","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Os Fragmentos do Bovadium","Autor":"J. R. R. Tolkien","Editora":"Harper Collins","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"As aventuras de Pedro Coelho","Autor":"Beatrix Potter","Editora":"Companhia das Letrinhas","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"Ensaio Sobre a Cegueira","Autor":"José Saramago","Editora":"Companhia das Letras","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Os 77 Melhores Contos de Hans Christian Andersen","Autor":"Hans Christian Andersen","Editora":"Nova Fronteira","ISBN":"978-8520944295","Ano-Compra":2026,"Lido":"Não"},{"Nome":"A impostora: Yellowface","Autor":"R. F. Kuang","Editora":"Intrinseca","ISBN":"978-8551010075","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Babel: Ou a Necessidade da Violência","Autor":"R. F. Kuang","Editora":"Intrinseca","ISBN":"978-8551008997","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Coraline","Autor":"Neil Gaiman","Editora":"Intrinseca","ISBN":"978-8551006757","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Heidi: A Menina dos Alpes","Autor":"Johanna Spyri","Editora":"Autêntica","ISBN":"978-6559280667","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Desventuras em Série 1 - Mau Começo","Autor":"Lemony Snicket","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"Desventuras em Série 2 - A Sala dos Répteis","Autor":"Lemony Snicket","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"Desventuras em Série 3 - O Lago das Sanguessugas","Autor":"Lemony Snicket","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"Desventuras em Série 4 - Serraria Baixo-Astral","Autor":"Lemony Snicket","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"Desventuras em Série 5 - Inferno no Colégio Interno","Autor":"Lemony Snicket","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"Desventuras em Série 6 - O Elevador Ersatz","Autor":"Lemony Snicket","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Sim"},{"Nome":"Desventuras em Série 7 - A Cidade Sinistra dos Corvos","Autor":"Lemony Snicket","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Desventuras em Série 8 - O Hospital Hostil","Autor":"Lemony Snicket","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Desventuras em Série 9 - O Espetáculo Carnívoro","Autor":"Lemony Snicket","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Desventuras em Série 10 - O Escorregador de Gelo","Autor":"Lemony Snicket","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Desventuras em Série 11 - A Gruta Gorgônea","Autor":"Lemony Snicket","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Desventuras em Série 12 - O Penúltimo Perigo","Autor":"Lemony Snicket","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Desventuras em Série 13 - O Fim","Autor":"Lemony Snicket","Editora":"Seguinte","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Crônicas de Âmbar 1 - Os Nove Príncipes de Âmbar","Autor":"Roger Zelazny","Editora":"Intrinseca","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Crônicas de Âmbar 2 - As Armas de Avalon","Autor":"Roger Zelazny","Editora":"Intrinseca","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Crônicas de Âmbar 3 - O Sinal do Unicórnio","Autor":"Roger Zelazny","Editora":"Intrinseca","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Crônicas de Âmbar 4 - A Mão de Oberon","Autor":"Roger Zelazny","Editora":"Intrinseca","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Crônicas de Âmbar 5 - As Cortes do Caos","Autor":"Roger Zelazny","Editora":"Intrinseca","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Crônicas de Âmbar 6 - Trunfos do Destino","Autor":"Roger Zelazny","Editora":"Intrinseca","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Crônicas de Âmbar 7 - O Sangue de Âmbar","Autor":"Roger Zelazny","Editora":"Intrinseca","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Crônicas de Âmbar 8 - O Sinal do Caos","Autor":"Roger Zelazny","Editora":"Intrinseca","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Crônicas de Âmbar 9 - Cavaleiro das Sombras","Autor":"Roger Zelazny","Editora":"Intrinseca","ISBN":"","Ano-Compra":2026,"Lido":"Não"},{"Nome":"Crônicas de Âmbar 10 - Príncipe do Caos","Autor":"Roger Zelazny","Editora":"Intrinseca","ISBN":"","Ano-Compra":2026,"Lido":"Não"}],"history":[{"Nome":"Merlin, o Mágico","Autor":"Anônimo","Data de Leitura":"1998-01-01","Status na Estante":"Sumiu","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":1998},{"Nome":"Patolino","Autor":"","Data de Leitura":"1998-01-01","Status na Estante":"Sumiu","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":1998},{"Nome":"A Princesa e a Ervilha","Autor":"Sérgio Luiz de Oliveira Silva","Data de Leitura":"1999-01-01","Status na Estante":"Sumiu","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":1999},{"Nome":"Mini Livro Jó","Autor":"","Data de Leitura":"1999-01-01","Status na Estante":"Sumiu","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":1999},{"Nome":"Mini Livro Pastor","Autor":"","Data de Leitura":"1999-01-01","Status na Estante":"Sumiu","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":1999},{"Nome":"Bisa Bia, Bisa Bel","Autor":"Ana Maria Machado","Data de Leitura":"2002-01-01","Status na Estante":"Sumiu","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2002},{"Nome":"Contos de Fadas Capa vermelha","Autor":"","Data de Leitura":"2002-01-01","Status na Estante":"Sumiu","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2002},{"Nome":"Carta errante, avó atrapalhada, menina aniversariante","Autor":"Mirna Pinsky","Data de Leitura":"2002-04-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2002},{"Nome":"Harry Potter e a Pedra Filosofal","Autor":"J. K. Rowling","Data de Leitura":"2004-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2004},{"Nome":"Harry Potter e a Câmara Secreta","Autor":"J. K. Rowling","Data de Leitura":"2004-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2004},{"Nome":"Um rio que vem da Grécia","Autor":"Cláudio Moreno","Data de Leitura":"2005-01-01","Status na Estante":"Doado","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2005},{"Nome":"Harry Potter e o Prisioneiro de Azkaban","Autor":"J. K. Rowling","Data de Leitura":"2005-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2005},{"Nome":"Brida","Autor":"Paulo Coelho","Data de Leitura":"2005-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2005},{"Nome":"Ciclo de Avalon - As Brumas de Avalon - A Senhora da Magia","Autor":"Marion Zimmer Bradley","Data de Leitura":"2006-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2006},{"Nome":"Ciclo de Avalon - As Brumas de Avalon - A Grande Rainha","Autor":"Marion Zimmer Bradley","Data de Leitura":"2006-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2006},{"Nome":"Harry Potter e o Cálice de Fogo","Autor":"J. K. Rowling","Data de Leitura":"2007-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2007},{"Nome":"Harry Potter e a Ordem da Fênix","Autor":"J. K. Rowling","Data de Leitura":"2007-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2007},{"Nome":"Harry Potter e o Enigma do Príncipe","Autor":"J. K. Rowling","Data de Leitura":"2007-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2007},{"Nome":"Ciclo de Avalon - As Brumas de Avalon - O Prisioneiro da Árvore","Autor":"Marion Zimmer Bradley","Data de Leitura":"2007-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2007},{"Nome":"Ciclo de Avalon - As Brumas de Avalon - O Gamo-Rei","Autor":"Marion Zimmer Bradley","Data de Leitura":"2007-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2007},{"Nome":"Harry Potter e as Relíquias da Morte","Autor":"J. K. Rowling","Data de Leitura":"2008-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2008},{"Nome":"As Primaveras (1867)","Autor":"Casimiro Jose Marques de Abreu","Data de Leitura":"2008-01-01","Status na Estante":"Doado","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2008},{"Nome":"Ramsés: O filho da luz","Autor":"Christian Jacq","Data de Leitura":"2008-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2008},{"Nome":"Ramsés: O Templo de Milhões de Anos","Autor":"Christian Jacq","Data de Leitura":"2008-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2008},{"Nome":"Mulheres que mudaram o mundo","Autor":"Gabriel Chalita","Data de Leitura":"2008-01-01","Status na Estante":"Doado","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2008},{"Nome":"Sutras Sagradas","Autor":"Masaharu Taniguchi","Data de Leitura":"2008-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2008},{"Nome":"\"Shinsokan\" e outras orações","Autor":"Masaharu Taniguchi","Data de Leitura":"2008-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2008},{"Nome":"O Menino do Dedo Verde","Autor":"Maurice Druon","Data de Leitura":"2008-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2008},{"Nome":"Pela porta do coração","Autor":"Regina Coeli Rennó","Data de Leitura":"2008-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2008},{"Nome":"Só é gordo quem quer","Autor":"Uchôa Junior","Data de Leitura":"2008-01-01","Status na Estante":"A venda","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2008},{"Nome":"Pelas Portas Do Coração","Autor":"Zíbia Gasparetto","Data de Leitura":"2008-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2008},{"Nome":"Laços Eternos","Autor":"Zíbia Gasparetto","Data de Leitura":"2008-01-01","Status na Estante":"Biblioteca","Detalhe":"Irradiação","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"Irradiação","Ano de Leitura":2008},{"Nome":"O Amor Venceu","Autor":"Zíbia Gasparetto","Data de Leitura":"2008-01-01","Status na Estante":"Biblioteca","Detalhe":"Irradiação","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"Irradiação","Ano de Leitura":2008},{"Nome":"Entre o Amor e a Guerra","Autor":"Zíbia Gasparetto","Data de Leitura":"2008-01-01","Status na Estante":"Biblioteca","Detalhe":"Irradiação","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"Irradiação","Ano de Leitura":2008},{"Nome":"A Casa","Autor":"André Vianco","Data de Leitura":"2009-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2009},{"Nome":"O Alquimista","Autor":"Paulo Coelho","Data de Leitura":"2009-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2009},{"Nome":"A Cabana","Autor":"William P. Young","Data de Leitura":"2009-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2009},{"Nome":"Ciclo de Avalon - A Sacerdotisa de Avalon","Autor":"Marion Zimmer Bradley","Data de Leitura":"2010-01-01","Status na Estante":"Biblioteca","Detalhe":"IFG","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"IFG","Ano de Leitura":2010},{"Nome":"O Livro dos Jovens","Autor":"Masaharu Taniguchi","Data de Leitura":"2010-01-01","Status na Estante":"Doado","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2010},{"Nome":"Educaçao Fisica Cuida Do Corpo...E \"Mente \"","Autor":"João Paulo S. Medina","Data de Leitura":"2010-01-01","Status na Estante":"Doado","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2010},{"Nome":"Aleph","Autor":"Paulo Coelho","Data de Leitura":"2010-01-01","Status na Estante":"Doado","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2010},{"Nome":"As Valkirias","Autor":"Paulo Coelho","Data de Leitura":"2010-01-01","Status na Estante":"Biblioteca","Detalhe":"UEG","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"UEG","Ano de Leitura":2010},{"Nome":"Terapia do Trabalho","Autor":"Daniel Grippo","Data de Leitura":"2012-01-01","Status na Estante":"Doado","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2012},{"Nome":"O Chá do Amor","Autor":"Jennifer Donnelly","Data de Leitura":"2012-01-01","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2012},{"Nome":"Vampiratas: Demônios do Oceano","Autor":"Justin Somper","Data de Leitura":"2012-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2012},{"Nome":"O que é Seicho-No-Ie","Autor":"Masaharu Taniguchi","Data de Leitura":"2012-01-01","Status na Estante":"Doado","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2012},{"Nome":"O Diário de um Mago","Autor":"Paulo Coelho","Data de Leitura":"2012-01-01","Status na Estante":"Biblioteca","Detalhe":"UEG","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"UEG","Ano de Leitura":2012},{"Nome":"Se Abrindo Para Vida","Autor":"Zíbia Gasparetto","Data de Leitura":"2012-01-01","Status na Estante":"Emprestado","Detalhe":"Helena","Formato_ou_Plataforma":"","Emprestado_de":"Helena","Origem_ou_Instituição":"","Ano de Leitura":2012},{"Nome":"Entrevista Com o Vampiro","Autor":"Anne Rice","Data de Leitura":"2013-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2013},{"Nome":"A princesa à espera","Autor":"Meg Cabot","Data de Leitura":"2013-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2013},{"Nome":"A Princesa Apaixonada","Autor":"Meg Cabot","Data de Leitura":"2013-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2013},{"Nome":"A Princesa Sob os Refletores","Autor":"Meg Cabot","Data de Leitura":"2013-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2013},{"Nome":"A Princesa de Rosa-Shocking","Autor":"Meg Cabot","Data de Leitura":"2013-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2013},{"Nome":"O Diário da Princesa","Autor":"Meg Cabot","Data de Leitura":"2013-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2013},{"Nome":"A princesa em treinamento","Autor":"Meg Cabot","Data de Leitura":"2013-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2013},{"Nome":"Princesa Mia","Autor":"Meg Cabot","Data de Leitura":"2013-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2013},{"Nome":"A Princesa no Limite","Autor":"Meg Cabot","Data de Leitura":"2013-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2013},{"Nome":"A princesa na balada","Autor":"Meg Cabot","Data de Leitura":"2013-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2013},{"Nome":"Princesa para sempre","Autor":"Meg Cabot","Data de Leitura":"2013-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2013},{"Nome":"O Nome do Vento","Autor":"Patrick Rothfuss","Data de Leitura":"2013-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2013},{"Nome":"As Crônicas de Nárnia 1 - O Sobrinho do mago","Autor":"C. S. Lewis","Data de Leitura":"2013-01-01","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2013},{"Nome":"As Crônicas de Nárnia 2 - O Leão, a Feiticeira e o Guarda-roupas","Autor":"C. S. Lewis","Data de Leitura":"2013-01-01","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2013},{"Nome":"Pai Rico, Pai Pobre","Autor":"Robert T. Kiyosaki","Data de Leitura":"2014-01-01","Status na Estante":"Doado","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2014},{"Nome":"As Crônicas de Nárnia 3 - O Cavalo e seu Menino","Autor":"C. S. Lewis","Data de Leitura":"2014-01-01","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2014},{"Nome":"As Crônicas de Nárnia 4 - Príncipe Caspian","Autor":"C. S. Lewis","Data de Leitura":"2014-01-01","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2014},{"Nome":"Vampiratas: Demonios del Oceano","Autor":"Justin Somper","Data de Leitura":"2014-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2014},{"Nome":"Mujercitas","Autor":"Louisa May Alcott","Data de Leitura":"2014-01-01","Status na Estante":"Emprestado","Detalhe":"Prof Uruguai","Formato_ou_Plataforma":"","Emprestado_de":"Prof Uruguai","Origem_ou_Instituição":"","Ano de Leitura":2014},{"Nome":"Marley e eu","Autor":"John Grogan","Data de Leitura":"2015-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2015},{"Nome":"Elantris","Autor":"Brandon Sanderson","Data de Leitura":"2015-01-01","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2015},{"Nome":"Eu sou o mensageiro","Autor":"Markus Zusak","Data de Leitura":"2015-01-01","Status na Estante":"Emprestado","Detalhe":"Larissa","Formato_ou_Plataforma":"","Emprestado_de":"Larissa","Origem_ou_Instituição":"","Ano de Leitura":2015},{"Nome":"O Deus e o Imperador","Autor":"Sam Meekings","Data de Leitura":"2015-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2015},{"Nome":"Crônicas da Galiléia: Histórias do Tempo de Jesus","Autor":"Ângelo Dias","Data de Leitura":"2016-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2016},{"Nome":"o modo feliz de viver seicho no ie Ed. 2010","Autor":"Seicho Taniguchi","Data de Leitura":"2016-01-01","Status na Estante":"Doado","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2016},{"Nome":"Memórias de uma Costureira","Autor":"Terezinha de Jseus Almeida","Data de Leitura":"2016-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2016},{"Nome":"Desventuras em Série 3 - O Lago das Sanguessugas","Autor":"Lemony Snicket","Data de Leitura":"2017-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2017},{"Nome":"Pollyanna","Autor":"Eleanor H. Porter","Data de Leitura":"2017-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2017},{"Nome":"Desventuras em Série 2 - A Sala dos Répteis","Autor":"Lemony Snicket","Data de Leitura":"2017-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2017},{"Nome":"Desventuras em Série 1 -Mau Começo","Autor":"Lemony Snicket","Data de Leitura":"2017-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2017},{"Nome":"Como os animais salvaram minha vida","Autor":"Luisa Mell","Data de Leitura":"2017-01-01","Status na Estante":"Doado","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2017},{"Nome":"Desventuras em Série 5 - Inferno no Colégio Interno","Autor":"Lemony Snicket","Data de Leitura":"2018-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2018},{"Nome":"O Pequeno Príncipe","Autor":"Antoine de Saint-Exupéry","Data de Leitura":"2018-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2018},{"Nome":"Pilates sem Riscos: os Riscos mais Comuns e como Evitá-los","Autor":"Blandine Calais-Germain","Data de Leitura":"2018-01-01","Status na Estante":"Emprestado","Detalhe":"Maris","Formato_ou_Plataforma":"","Emprestado_de":"Maris","Origem_ou_Instituição":"","Ano de Leitura":2018},{"Nome":"Comer, Rezar, Amar - Ediao Comemorativa","Autor":"Elizabeth Gilbert","Data de Leitura":"2018-01-01","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2018},{"Nome":"Pilates para grávidas: Exercícios simples e seguros para antes e depois do parto","Autor":"Jan Endacott","Data de Leitura":"2018-01-01","Status na Estante":"Emprestado","Detalhe":"Maris","Formato_ou_Plataforma":"","Emprestado_de":"Maris","Origem_ou_Instituição":"","Ano de Leitura":2018},{"Nome":"A Obra completa de Joseph Pilates: Sua Saúde","Autor":"Joseph Pilates","Data de Leitura":"2018-01-01","Status na Estante":"Emprestado","Detalhe":"Maris","Formato_ou_Plataforma":"","Emprestado_de":"Maris","Origem_ou_Instituição":"","Ano de Leitura":2018},{"Nome":"A Obra completa de Joseph Pilates:  Retorno à Vida Através da Contrologia","Autor":"Joseph Pilates","Data de Leitura":"2018-01-01","Status na Estante":"Emprestado","Detalhe":"Maris","Formato_ou_Plataforma":"","Emprestado_de":"Maris","Origem_ou_Instituição":"","Ano de Leitura":2018},{"Nome":"Desventuras em Série 4 - Serraria Baixo-Astral","Autor":"Lemony Snicket","Data de Leitura":"2018-01-01","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2018},{"Nome":"Percy Jackson e os Olimpianos - O Mar de Monstros","Autor":"Rick Riordan","Data de Leitura":"2018-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2018},{"Nome":"Percy Jackson e os Olimpianos - A Batalha do Labirinto","Autor":"Rick Riordan","Data de Leitura":"2018-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2018},{"Nome":"Percy Jackson e os Olimpianos - A Maldição do Titã","Autor":"Rick Riordan","Data de Leitura":"2018-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2018},{"Nome":"Percy Jackson e os Olimpianos - O Ladrão de Raios","Autor":"Rick Riordan","Data de Leitura":"2018-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2018},{"Nome":"Percy Jackson e os Olimpianos - O Último Olimpiano","Autor":"Rick Riordan","Data de Leitura":"2018-01-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2018},{"Nome":"Método Delavier de musculação","Autor":"Frédéric Delavier, Michael Gundill","Data de Leitura":"2019-01-01","Status na Estante":"Vendido","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Contentamento","Autor":"Dalai Lama XIV","Data de Leitura":"2019-01-04","Status na Estante":"Emprestado","Detalhe":"Aluna","Formato_ou_Plataforma":"","Emprestado_de":"Aluna","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Agua para elefantes","Autor":"Sara Gruen","Data de Leitura":"2019-01-05","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Romeu e Julieta","Autor":"William Shakespeare","Data de Leitura":"2019-01-13","Status na Estante":"Sumiu","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Jogos Vorazes","Autor":"Suzanne Collins","Data de Leitura":"2019-01-26","Status na Estante":"Biblioteca","Detalhe":"Internet","Formato_ou_Plataforma":"Internet","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Jogos Vorazes -  Em Chamas","Autor":"Suzanne Collins","Data de Leitura":"2019-01-28","Status na Estante":"Biblioteca","Detalhe":"Internet","Formato_ou_Plataforma":"Internet","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Jogos Vorazes -  A Esperança","Autor":"Suzanne Collins","Data de Leitura":"2019-02-02","Status na Estante":"Biblioteca","Detalhe":"Internet","Formato_ou_Plataforma":"Internet","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Viagem À Lua De Canoa","Autor":"Hugo Almeida","Data de Leitura":"2019-02-07","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"O que é o mistério","Autor":"Anônimo","Data de Leitura":"2019-03-31","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Avaliacao e Prescricao de Exercicios Fisicos: Normas e Diretrizes","Autor":"Various","Data de Leitura":"2019-04-07","Status na Estante":"A venda","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Os Heróis do Olimpo - O Herói Perdido","Autor":"Rick Riordan","Data de Leitura":"2019-04-21","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Encarnação","Autor":"José de Alencar","Data de Leitura":"2019-05-06","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Os Heróis do Olimpo - O Filho de Netuno","Autor":"Rick Riordan","Data de Leitura":"2019-05-11","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Os Heróis do Olimpo - A Marca de Atena","Autor":"Rick Riordan","Data de Leitura":"2019-05-13","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Memórias de minhas putas tristes","Autor":"Gabriel García Márquez","Data de Leitura":"2019-06-18","Status na Estante":"Emprestado","Detalhe":"Aluna","Formato_ou_Plataforma":"","Emprestado_de":"Aluna","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Por que Etica E Mais Importante do que Religiao","Autor":"Dalai Lama XIV, Franz Alt","Data de Leitura":"2019-07-22","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"As Crônicas de Nárnia 5 - A Viagem do Peregrino da Alvorada","Autor":"C. S. Lewis","Data de Leitura":"2019-07-25","Status na Estante":"Emprestado","Detalhe":"Aluna","Formato_ou_Plataforma":"","Emprestado_de":"Aluna","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Alma de Minh'Alma","Autor":"J.W. Rochester","Data de Leitura":"2019-08-09","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Os Heróis do Olimpo - A Casa de Hades","Autor":"Rick Riordan","Data de Leitura":"2019-11-01","Status na Estante":"Sumiu","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Os Heróis do Olimpo - O Sangue do Olimpo","Autor":"Rick Riordan","Data de Leitura":"2019-11-08","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Capitães da Areia","Autor":"Jorge Amado","Data de Leitura":"2019-12-19","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2019},{"Nome":"Frankenstein Ou o Prometeu Moderno","Autor":"Mary Shelley","Data de Leitura":"2020-01-24","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2020},{"Nome":"A Arte da Guerra","Autor":"Sun Tzu","Data de Leitura":"2020-01-30","Status na Estante":"Sumiu","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2020},{"Nome":"Hamlet","Autor":"William Shakespeare","Data de Leitura":"2020-02-23","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2020},{"Nome":"O Hobbit","Autor":"J.R.R. Tolkien","Data de Leitura":"2020-04-06","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2020},{"Nome":"Todos Podem Ter Sucesso","Autor":"Katsumi Tokuhisa","Data de Leitura":"2020-04-06","Status na Estante":"Doado","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2020},{"Nome":"Avanços no Treinamento Funcional","Autor":"Michael Boyle","Data de Leitura":"2020-04-08","Status na Estante":"Vendido","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2020},{"Nome":"Vidas Secas","Autor":"Graciliano Ramos","Data de Leitura":"2020-07-25","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2020},{"Nome":"O Guia do Mochileiro das Galáxias","Autor":"Douglas Adams","Data de Leitura":"2020-08-09","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2020},{"Nome":"Fronteiras do Universo -  A Bússola de Ouro","Autor":"Philip Pullman","Data de Leitura":"2020-08-12","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2020},{"Nome":"O Maravilhoso Mágico de Oz","Autor":"Eric Shanower","Data de Leitura":"2020-12-12","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2020},{"Nome":"Fernão Capelo Gaivota","Autor":"Richard Bach","Data de Leitura":"2020-12-28","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2020},{"Nome":"O Labirinto de Ossos","Autor":"Rick Riordan","Data de Leitura":"2020-12-31","Status na Estante":"Doado","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2020},{"Nome":"Jane Eyre","Autor":"Charlotte Brontë","Data de Leitura":"2021-01-06","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"O Conto da Aia","Autor":"Margaret Atwood","Data de Leitura":"2021-01-26","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Alice no País das Maravilhas","Autor":"Lewis Carroll","Data de Leitura":"2021-05-12","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Fronteiras do Universo -  A Faca Sutil","Autor":"Philip Pullman","Data de Leitura":"2021-05-25","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"O cão alegre","Autor":"Jo Yong","Data de Leitura":"2021-05-28","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Criança zumbi","Autor":"Jo Yong","Data de Leitura":"2021-05-28","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"O menino que se alimentava de pesadelos","Autor":"Jo Yong","Data de Leitura":"2021-05-28","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"A mão e o tamboril","Autor":"Jo Yong","Data de Leitura":"2021-05-28","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Em busca da feição real","Autor":"Jo Yong","Data de Leitura":"2021-05-28","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Alice através do espelho e o que ela encontrou lá","Autor":"Lewis Carroll","Data de Leitura":"2021-05-29","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Desventuras em Série - O Elevador Ersatz","Autor":"Lemony Snicket","Data de Leitura":"2021-06-09","Status na Estante":"Emprestado","Detalhe":"Plínio","Formato_ou_Plataforma":"","Emprestado_de":"Plínio","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Prince of Thorns","Autor":"Mark Lawrence","Data de Leitura":"2021-06-20","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Punição para a Inocência","Autor":"Agatha Christie","Data de Leitura":"2021-06-27","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"O Nariz / Diário de um Louco","Autor":"Nikolai Gogol","Data de Leitura":"2021-06-28","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Os contos de Beedle, o Bardo","Autor":"J. K. Rowling","Data de Leitura":"2021-07-04","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Eu Sou a Lenda","Autor":"Richard Matheson","Data de Leitura":"2021-07-07","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Um Mistério no Caribe","Autor":"Agatha Christie","Data de Leitura":"2021-07-17","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"A importância do Pilates na Gestação","Autor":"Pablo Morales Barbian","Data de Leitura":"2021-08-20","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Meu Pé de Laranja Lima","Autor":"José Mauro de Vasconcelos","Data de Leitura":"2021-09-03","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"A Revolução dos Bichos","Autor":"George Orwell","Data de Leitura":"2021-09-05","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Guia Completo de Pilates","Autor":"Alan Herdman","Data de Leitura":"2021-09-13","Status na Estante":"A venda","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"A Cartomante","Autor":"Machado de Assis","Data de Leitura":"2021-09-29","Status na Estante":"Biblioteca","Detalhe":"Sesc","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"Sesc","Ano de Leitura":2021},{"Nome":"A causa secreta: conto","Autor":"Machado de Assis","Data de Leitura":"2021-09-29","Status na Estante":"Biblioteca","Detalhe":"Sesc","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"Sesc","Ano de Leitura":2021},{"Nome":"O Menino, a Toupeira, a Raposa e o Cavalo","Autor":"Charlie Mackesy","Data de Leitura":"2021-10-04","Status na Estante":"Emprestado","Detalhe":"Bibliotecaria","Formato_ou_Plataforma":"","Emprestado_de":"Bibliotecaria","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"A parte que Falta","Autor":"Shel Silverstein","Data de Leitura":"2021-10-04","Status na Estante":"Emprestado","Detalhe":"Bibliotecaria","Formato_ou_Plataforma":"","Emprestado_de":"Bibliotecaria","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"A parte que falta encontra o grande O","Autor":"Shel Silverstein","Data de Leitura":"2021-10-05","Status na Estante":"Emprestado","Detalhe":"Bibliotecaria","Formato_ou_Plataforma":"","Emprestado_de":"Bibliotecaria","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Cem: O que aprendemos na vida","Autor":"Valerio Vidali, Heike Faller","Data de Leitura":"2021-10-05","Status na Estante":"Emprestado","Detalhe":"Bibliotecaria","Formato_ou_Plataforma":"","Emprestado_de":"Bibliotecaria","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Dom Quixote","Autor":"Miguel de Cervantes","Data de Leitura":"2021-10-06","Status na Estante":"Biblioteca","Detalhe":"Sesc","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"Sesc","Ano de Leitura":2021},{"Nome":"Maus: A História de um Sobrevivente","Autor":"Art Spiegelman","Data de Leitura":"2021-10-10","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Noite Sem Fim","Autor":"Agatha Christie","Data de Leitura":"2021-10-19","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"Contos de Amor e Ciúme","Autor":"Machado de Assis","Data de Leitura":"2021-11-11","Status na Estante":"Biblioteca","Detalhe":"Sesc","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"Sesc","Ano de Leitura":2021},{"Nome":"O Médico e O Monstro & Outros Experimentos","Autor":"Robert Louis Stevenson","Data de Leitura":"2021-11-15","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"As Coisas Que Você Só Vê Quando Desacelera","Autor":"Haemin Sunim","Data de Leitura":"2021-11-20","Status na Estante":"Biblioteca","Detalhe":"Internet","Formato_ou_Plataforma":"Internet","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"As Crônicas de Nárnia 6 - A Cadeira de Prata","Autor":"C. S. Lewis","Data de Leitura":"2021-11-21","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"O Amante","Autor":"Marguerite Duras","Data de Leitura":"2021-12-14","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2021},{"Nome":"O Sequestro do Primeiro Ministro","Autor":"Agatha Christie","Data de Leitura":"2022-01-01","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"O Estrangeiro","Autor":"Albert Camus","Data de Leitura":"2022-01-01","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"A Canção dos Shenlongs: Guerras Épicas do Império de Housai","Autor":"Diogo Andrade","Data de Leitura":"2022-01-01","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"O cavaleiro Preso na Armadura","Autor":"Robert Fisher","Data de Leitura":"2022-01-07","Status na Estante":"Biblioteca","Detalhe":"Youtube","Formato_ou_Plataforma":"Youtube","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"Jesus Rocks - English version","Autor":"Brão Barbosa","Data de Leitura":"2022-01-08","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"A Iara: Uma lenda indígena em quadrinhos","Autor":"Silvino","Data de Leitura":"2022-01-14","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"Turma da Onça Pintada -  Cadê o Rodolfo?","Autor":"Anônimo","Data de Leitura":"2022-01-29","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"Turma da Onça Pintada -  Romeu foi Clonado?","Autor":"Anônimo","Data de Leitura":"2022-01-29","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"Turma da Onça Pintada - Uma Nova Amizade","Autor":"Anônimo","Data de Leitura":"2022-01-29","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"Turma da Onça Pintada - A grande corrida","Autor":"Anônimo","Data de Leitura":"2022-01-29","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"Turma da Onça Pintada - Festa na Floresta","Autor":"Anônimo","Data de Leitura":"2022-01-29","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"O Corpo Pilates. Um Guia Para Fortalecimento, Alongamento E Tonificação Sem O Uso De Máquinas","Autor":"Brooke Siler","Data de Leitura":"2022-01-31","Status na Estante":"A venda","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"A Tempestade","Autor":"Lillo Parra","Data de Leitura":"2022-01-31","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"Pilates Para Você","Autor":"Ann Crowther","Data de Leitura":"2022-02-13","Status na Estante":"A venda","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"O Mundo de Sofia","Autor":"Jostein Gaarder","Data de Leitura":"2022-03-01","Status na Estante":"Biblioteca","Detalhe":"Youtube","Formato_ou_Plataforma":"Youtube","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"A Princesinha","Autor":"Frances Hodgson Burnett","Data de Leitura":"2022-07-21","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"LPF 1","Autor":"Anônimo","Data de Leitura":"2022-07-31","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"LPF 2","Autor":"Anônimo","Data de Leitura":"2022-10-30","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"LPF 3","Autor":"Anônimo","Data de Leitura":"2022-10-30","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"Curso Essencial de Pilates","Autor":"Hayes","Data de Leitura":"2022-11-03","Status na Estante":"A venda","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2022},{"Nome":"O Labirinto Do Fauno","Autor":"Guillermo del Toro, Cornelia Funke","Data de Leitura":"2023-01-13","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2023},{"Nome":"Fronteiras do Universo -  A Luneta Âmbar","Autor":"Philip Pullman","Data de Leitura":"2023-04-17","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2023},{"Nome":"O milagre da manhã","Autor":"Hal Elrod","Data de Leitura":"2023-05-24","Status na Estante":"Biblioteca","Detalhe":"Spotify","Formato_ou_Plataforma":"Spotify","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2023},{"Nome":"Dom Casmurro","Autor":"Machado de Assis","Data de Leitura":"2023-05-31","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2023},{"Nome":"O que é Depressão","Autor":"Borchard","Data de Leitura":"2023-07-01","Status na Estante":"A venda","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2023},{"Nome":"A Árvore em Mim","Autor":"Corinna Luyken, Susana Cardoso Ferreira","Data de Leitura":"2023-07-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2023},{"Nome":"Quando Mamãe ou Papai Morre","Autor":"GRIPPO","Data de Leitura":"2023-07-01","Status na Estante":"A venda","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2023},{"Nome":"Because of You, Mom","Autor":"Kobi Yamada","Data de Leitura":"2023-07-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2023},{"Nome":"Amanhã","Autor":"Lucia Hiratsuka","Data de Leitura":"2023-07-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2023},{"Nome":"O que Acontece Quando Aguem Morre?","Autor":"Mundy Michaelene","Data de Leitura":"2023-07-01","Status na Estante":"A venda","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2023},{"Nome":"Amiga ursa – Uma história triste, mas com final feliz","Autor":"Rita Lee","Data de Leitura":"2023-07-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2023},{"Nome":"O que eu faço com esse buraco?","Autor":"Rossana Ramos","Data de Leitura":"2023-07-01","Status na Estante":"A venda","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2023},{"Nome":"Uma Grande Amizade","Autor":"Flávio Colombini","Data de Leitura":"2024-01-01","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"Bom soninho, Lili!","Autor":"Tia Cris","Data de Leitura":"2024-01-01","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"O dia em que adotei o Pipoca","Autor":"Verônica Matioli","Data de Leitura":"2024-01-01","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"A mulher em mim","Autor":"Britney Spears","Data de Leitura":"2024-01-31","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"Vamos Aquecer o Sol","Autor":"José Mauro de Vasconcelos","Data de Leitura":"2024-02-12","Status na Estante":"Emprestado","Detalhe":"Lorena","Formato_ou_Plataforma":"","Emprestado_de":"Lorena","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"Doidão","Autor":"José Mauro de Vasconcelos","Data de Leitura":"2024-02-13","Status na Estante":"Emprestado","Detalhe":"Lorena","Formato_ou_Plataforma":"","Emprestado_de":"Lorena","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"Roverando","Autor":"J. R. R. Tolkien","Data de Leitura":"2024-08-24","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"Diário de uma ansiosa ou como parei de me sabotar","Autor":"Beth Evans","Data de Leitura":"2024-10-21","Status na Estante":"Emprestado","Detalhe":"Lorena","Formato_ou_Plataforma":"","Emprestado_de":"Lorena","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"Olhos d'água","Autor":"Conceição Evaristo","Data de Leitura":"2024-10-28","Status na Estante":"Doado","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"Drácula","Autor":"Bram Stoker","Data de Leitura":"2024-10-31","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"As Crônicas de Nárnia 7 - A Ultima Batalha","Autor":"C. S. Lewis","Data de Leitura":"2024-11-17","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"Três Maneiras de Escrever para Crianças","Autor":"C. S. Lewis","Data de Leitura":"2024-11-17","Status na Estante":"Emprestado","Detalhe":"Amanda","Formato_ou_Plataforma":"","Emprestado_de":"Amanda","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"Harry Potter - Natal em Hogwarts","Autor":"J. K. Rowling","Data de Leitura":"2024-11-21","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"O gato que amava livros","Autor":"Sōsuke Natsukawa","Data de Leitura":"2024-11-27","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"Porque Não Pediram a Evans?","Autor":"Agatha Christie","Data de Leitura":"2024-12-03","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"Vai dar tudo certo","Autor":"Lysa Terkeurst","Data de Leitura":"2024-12-12","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"O Retrato de Dorian Gray","Autor":"Oscar Wilde","Data de Leitura":"2024-12-12","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"O jumentinho que carregou um rei","Autor":"R.C. Sproul, Chuck Groenink","Data de Leitura":"2024-12-12","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"O Príncipe","Autor":"Niccolò Machiavelli","Data de Leitura":"2024-12-30","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2024},{"Nome":"Lendas Japonesas","Autor":"Loputyn","Data de Leitura":"2025-01-10","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Auto da Barca do Inferno","Autor":"Gil Vicente","Data de Leitura":"2025-01-11","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"O auto da compadecida","Autor":"Ariano Suassuna","Data de Leitura":"2025-02-16","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"O Navio Negreiro","Autor":"Castro Alves","Data de Leitura":"2025-03-04","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Battle Royale","Autor":"Koushun Takami","Data de Leitura":"2025-03-06","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"O Morro dos Ventos Uivantes","Autor":"Emily Brontë","Data de Leitura":"2025-03-31","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"O Menino Marrom","Autor":"Ziraldo","Data de Leitura":"2025-04-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Matilda","Autor":"Roald Dahl","Data de Leitura":"2025-04-30","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"O Estranho Mundo de Jack","Autor":"Sally Morgan","Data de Leitura":"2025-05-01","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"O curioso caso de Benjamin Button","Autor":"F. Scott Fitzgerald","Data de Leitura":"2025-05-02","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Agnes Grey","Autor":"Anne Brontë","Data de Leitura":"2025-05-29","Status na Estante":"Biblioteca","Detalhe":"Kindle","Formato_ou_Plataforma":"Kindle","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"O Ickabog","Autor":"J. K. Rowling","Data de Leitura":"2025-06-09","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Onze minutos","Autor":"Paulo Coelho","Data de Leitura":"2025-06-15","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Malala: A Menina que Queria ir para a Escola","Autor":"Adriana Carranca","Data de Leitura":"2025-06-16","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"O Velho e o Mar","Autor":"Ernest Hemingway","Data de Leitura":"2025-06-30","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Cem Gramas de Centeio","Autor":"Agatha Christie","Data de Leitura":"2025-07-04","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"A teia de Charlotte","Autor":"E.B. White","Data de Leitura":"2025-08-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Jogos Vorazes - A Cantiga dos Pássaros e das Serpentes","Autor":"Suzanne Collins","Data de Leitura":"2025-08-25","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Os Quatro Grandes","Autor":"Agatha Christie","Data de Leitura":"2025-09-06","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Assassinato no Expresso do Oriente","Autor":"Agatha Christie","Data de Leitura":"2025-09-12","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Ferreiro do Bosque Maior","Autor":"J. R. R. Tolkien","Data de Leitura":"2025-10-15","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Ali Baba e os quarenta ladrões","Autor":"Carlos Heitor Cony","Data de Leitura":"2025-11-03","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Aladim e a lâmpada maravilhosa: Adaptação de um conto das Mil e Uma Noites","Autor":"Carlos Heitor Cony","Data de Leitura":"2025-11-03","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"O califa de Bagdá","Autor":"Carlos Heitor Cony","Data de Leitura":"2025-11-06","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Sr. Boaventura","Autor":"J. R. R. Tolkien","Data de Leitura":"2025-11-08","Status na Estante":"Emprestado","Detalhe":"Miguel","Formato_ou_Plataforma":"","Emprestado_de":"Miguel","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Sindba o marujo","Autor":"Carlos Heitor Cony","Data de Leitura":"2025-11-09","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Cadadad e seus irmaos","Autor":"Monteiro Lobato","Data de Leitura":"2025-11-09","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"A princesa de deriabar","Autor":"Monteiro Lobato","Data de Leitura":"2025-11-09","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"O Jardim Secreto","Autor":"Frances Hodgson Burnett","Data de Leitura":"2025-11-13","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"O patinho feio e outras histórias","Autor":"Hans Christian Andersen","Data de Leitura":"2025-11-14","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"O homem que falava javanês","Autor":"Lima Barreto","Data de Leitura":"2025-11-17","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Mestre Giles d'Aldeia","Autor":"J. R. R. Tolkien","Data de Leitura":"2025-11-20","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"1984","Autor":"George Orwell","Data de Leitura":"2025-11-24","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"O Silmarillion","Autor":"J. R. R. Tolkien","Data de Leitura":"2025-12-16","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"O Mistério dos Sete Relógios","Autor":"Agatha Christie","Data de Leitura":"2025-12-23","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2025},{"Nome":"Jogos Vorazes -  Amanhecer na Colheita","Autor":"Suzanne Collins","Data de Leitura":"2026-01-09","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"A Mulher De Trinta Anos","Autor":"Honoré de Balzac","Data de Leitura":"2026-01-22","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"A montanha do poder - Origem: Japão","Autor":"Patricia Engel Secco","Data de Leitura":"2026-01-25","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"A sombra do vento","Autor":"Carlos Ruiz Zafón","Data de Leitura":"2026-01-28","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"E Não Sobrou Nenhum","Autor":"Agatha Christie","Data de Leitura":"2026-01-30","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"O Sol é para todos","Autor":"Harper Lee","Data de Leitura":"2026-01-31","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"Stuart Little","Autor":"E.B. White","Data de Leitura":"2026-02-01","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"Os Testamentos","Autor":"Margaret Atwood","Data de Leitura":"2026-02-04","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"Os Filhos de Húrin","Autor":"J. R. R. Tolkien","Data de Leitura":"2026-02-09","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"O fantástico senhor Raposo","Autor":"Roald Dahl","Data de Leitura":"2026-03-03","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"As Aventuras de Pinóquio: História de um Boneco","Autor":"Carlo Collodi","Data de Leitura":"2026-03-11","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"A Biblioteca da Meia-Noite","Autor":"Matt Haig","Data de Leitura":"2026-03-16","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"A Volta ao Mundo em 80 Dias","Autor":"Jules Verne","Data de Leitura":"2026-03-17","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"Memorias de Um Sargento de Milicias: Romance de Costumes Brasileiros...","Autor":"Manuel Antônio de Almeida","Data de Leitura":"2026-03-26","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"Admirável Mundo Novo","Autor":"Aldous Huxley","Data de Leitura":"2026-04-06","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"talvez a sua jornada agora seja só sobre você: crônicas","Autor":"Iandê Albuquerque","Data de Leitura":"2026-04-13","Status na Estante":"A venda","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"O Cão dos Baskerville","Autor":"Arthur Conan Doyle","Data de Leitura":"2026-04-17","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"As Nódoas de Sangue / O Último Adeus","Autor":"Arthur Conan Doyle","Data de Leitura":"2026-04-18","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"Adventure of the Abbey Grange","Autor":"Arthur Conan Doyle","Data de Leitura":"2026-04-19","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"A Tragédia do Glória Scott * O Estrela de Prata * O Tratado Naval","Autor":"Arthur Conan Doyle","Data de Leitura":"2026-04-19","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"Ancestrais de Avalon: as origens atlantes da poderosa ilha de Avalon","Autor":"Marion Zimmer Bradley, Diana L. Paxson","Data de Leitura":"2026-04-20","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"Árvore e Folha","Autor":"J. R. R. Tolkien","Data de Leitura":"2026-04-29","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"Sonho de uma Noite de Verão","Autor":"William Shakespeare","Data de Leitura":"2026-05-06","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"Ponte Para Terabítia","Autor":"Katherine Paterson","Data de Leitura":"2026-05-23","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"Caninos Brancos","Autor":"Jack London","Data de Leitura":"2026-06-04","Status na Estante":"Estante","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"O Garoto do Riquixá","Autor":"Lao She","Data de Leitura":"2026-06-11","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"As aventuras de Pedro Coelho","Autor":"Beatrix Potter","Data de Leitura":"2026-07-06","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"Terra-média -  Beren e Luthien","Autor":"J. R. R. Tolkien","Data de Leitura":"2026-07-10","Status na Estante":"Estante","Detalhe":"","Formato_ou_Plataforma":"","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":2026},{"Nome":"As Minas do Rei Salomão","Autor":"Henry Rider Haggard","Data de Leitura":"","Status na Estante":"Biblioteca","Detalhe":"Audible","Formato_ou_Plataforma":"Audible","Emprestado_de":"","Origem_ou_Instituição":"","Ano de Leitura":null}]};
+const C=DATA.collection, H=DATA.history;
+const VALIDATED_CONCILIATION=[{"history_title":"Sutras Sagradas","history_author":"Masaharu Taniguchi","collection_title":"Sutra Sagrada","collection_author":"Masaharu Taniguchi"},{"history_title":"\"Shinsokan\" e outras orações","history_author":"Masaharu Taniguchi","collection_title":"Shinsokan e outras oraçõe","collection_author":"Masaharu Taniguchi"},{"history_title":"O Nome do Vento","history_author":"Patrick Rothfuss","collection_title":"A Crônica do Matador de Rei -  O Nome do Vento","collection_author":"Patrick Rothfuss"},{"history_title":"Percy Jackson e os Olimpianos - O Mar de Monstros","history_author":"Rick Riordan","collection_title":"Percy Jackson e os Olimpianos - Mar de Monstros**","collection_author":"Rick Riordan"},{"history_title":"Percy Jackson e os Olimpianos - A Batalha do Labirinto","history_author":"Rick Riordan","collection_title":"Percy Jackson e os Olimpianos - A Batalha no Labirinto**","collection_author":"Rick Riordan"},{"history_title":"Por que Etica E Mais Importante do que Religiao","history_author":"Dalai Lama XIV, Franz Alt","collection_title":"Porque Ética é mais Importante do que a Religião","collection_author":"Dalai Lama"},{"history_title":"Frankenstein Ou o Prometeu Moderno","history_author":"Mary Shelley","collection_title":"Frankenstein","collection_author":"Mary Shelley"},{"history_title":"O Hobbit","history_author":"J.R.R. Tolkien","collection_title":"Terra-média - O Hobbit **","collection_author":"J. R. R. Tolkien"},{"history_title":"Criança zumbi","history_author":"Jo Yong","collection_title":"Tudo bem Não ser Normal - Criança Zumbi","collection_author":"Jo Yong; Jam San"},{"history_title":"O menino que se alimentava de pesadelos","history_author":"Jo Yong","collection_title":"Tudo bem Não ser Normal - O menino que se Alimentava de Pesadelos","collection_author":"Jo Yong; Jam San"},{"history_title":"A mão e o tamboril","history_author":"Jo Yong","collection_title":"Tudo bem Não ser Normal - A Mão e o Tamboril","collection_author":"Jo Yong; Jam San"},{"history_title":"Em busca da feição real","history_author":"Jo Yong","collection_title":"Tudo bem Não ser Normal - Em Busca da Feição Real","collection_author":"Jo Yong; Jam San"},{"history_title":"Alice através do espelho e o que ela encontrou lá","history_author":"Lewis Carroll","collection_title":"Alice Através do Espelho","collection_author":"Lewis Carroll"},{"history_title":"Prince of Thorns","history_author":"Mark Lawrence","collection_title":"Trilogia dos Espinhos - Prince of Thorns**","collection_author":"Mark Lawrence"},{"history_title":"Os contos de Beedle, o Bardo","history_author":"J. K. Rowling","collection_title":"Harry Potter - Os Contos de Beedle o Bardo - ilustrado","collection_author":"J. K. Rowling"},{"history_title":"Meu Pé de Laranja Lima","history_author":"José Mauro de Vasconcelos","collection_title":"O Meu Pé de Laranja Lima","collection_author":"José Mauro de Vasconcelos"},{"history_title":"A Revolução dos Bichos","history_author":"George Orwell","collection_title":"A fazenda dos Animais","collection_author":"George Orwell"},{"history_title":"O Médico e O Monstro & Outros Experimentos","history_author":"Robert Louis Stevenson","collection_title":"O Médico e o Monstro e Outros Experimentos*","collection_author":"Robert Louis Stevenson"},{"history_title":"Because of You, Mom","history_author":"Kobi Yamada","collection_title":"Por Causa de Você, Mãe","collection_author":"Kobi Yamada"},{"history_title":"Amiga ursa – Uma história triste, mas com final feliz","history_author":"Rita Lee","collection_title":"Amiga Ursa","collection_author":"Rita Lee"},{"history_title":"Harry Potter - Natal em Hogwarts","history_author":"J. K. Rowling","collection_title":"Harry Potter - Natal em Hogwarts - ilustrado","collection_author":"J. K. Rowling"},{"history_title":"O Morro dos Ventos Uivantes","history_author":"Emily Brontë","collection_title":"Morro dos Ventos Uivantes","collection_author":"Emily Brontë"},{"history_title":"Cem Gramas de Centeio","history_author":"Agatha Christie","collection_title":"Rainha do Crime - Cem Gramas de Centeio ","collection_author":"Agatha Christie"},{"history_title":"O Silmarillion","history_author":"J. R. R. Tolkien","collection_title":"Terra-média - O Silmarillion","collection_author":"J. R. R. Tolkien"},{"history_title":"O Mistério dos Sete Relógios","history_author":"Agatha Christie","collection_title":"Rainha do Crime - O Mistério dos Sete Relógios","collection_author":"Agatha Christie"},{"history_title":"A montanha do poder - Origem: Japão","history_author":"Patricia Engel Secco","collection_title":"A Montanha do Poder","collection_author":"Patrícia Engel Secco"},{"history_title":"A sombra do vento","history_author":"Carlos Ruiz Zafón","collection_title":"O Cemitério dos Livros Esquecidos - A Sombra do Vento ","collection_author":"Carlos Ruiz Zafón"},{"history_title":"E Não Sobrou Nenhum","history_author":"Agatha Christie","collection_title":"Rainha do Crime - E Não Sobrou Nenhum","collection_author":"Agatha Christie"},{"history_title":"Os Testamentos","history_author":"Margaret Atwood","collection_title":"O Conto da Aia - Os Testamentos","collection_author":"Margaret Atwood"},{"history_title":"Os Filhos de Húrin","history_author":"J. R. R. Tolkien","collection_title":"Terra-média -  Os Filhos de Hurin","collection_author":"J. R. R. Tolkien"},{"history_title":"O fantástico senhor Raposo","history_author":"Roald Dahl","collection_title":"Fantástico Senhor Raposo","collection_author":"Roald Dahl"},{"history_title":"As Aventuras de Pinóquio: História de um Boneco","history_author":"Carlo Collodi","collection_title":"As Aventuras de Pinoquio","collection_author":"Carlo Collodi"},{"history_title":"O Cão dos Baskerville","history_author":"Arthur Conan Doyle","collection_title":"O Cão dos Barkerville","collection_author":"Arthur Conan Doyle"}];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
+const pct=(n,d)=>d?((n/d)*100).toFixed(2).replace('.',',')+'%':'0,00%';
+function uniq(arr){return [...new Set(arr.map(v=>v==null||v===''?'Não informado':String(v)))].sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));}
+function fillSelect(id, vals){let s=$(id);s.innerHTML='<option value="__ALL__">Todos</option>'+uniq(vals).map(v=>`<option>${esc(v)}</option>`).join('');}
+fillSelect('fStatus',C.map(r=>r['Lido'])); fillSelect('fAuthor',C.map(r=>r['Autor'])); fillSelect('fPublisher',C.map(r=>r['Editora'])); fillSelect('fPurchaseYear',C.map(r=>r['Ano-Compra']));
+fillSelect('fReadYear',H.map(r=>r['Ano de Leitura'])); fillSelect('fFormat',H.map(readingType)); fillSelect('fLoaner',H.map(r=>r['Emprestado_de'])); fillSelect('fOrigin',H.map(r=>r['Origem_ou_Instituição'])); fillSelect('fHistStatus',H.map(r=>r['Status na Estante']));
+function match(v,sel){if(sel==='__ALL__')return true;let vv=(v==null||v==='')?'Não informado':String(v);return vv===sel;}
+function counts(rows, field){
+  const map = new Map();
+  rows.forEach(r => {
+    const raw = r[field];
+    const label = (raw == null || raw === '') ? 'Não informado' : String(raw);
+    map.set(label, (map.get(label) || 0) + 1);
+  });
+  return [...map.entries()].map(([label,value]) => ({label,value}));
+}
+function tip(e, text){
+  const el = $('tip');
+  if(!el) return;
+  el.textContent = text;
+  el.style.display = 'block';
+  el.style.left = ((e && e.clientX) || 0) + 12 + 'px';
+  el.style.top = ((e && e.clientY) || 0) + 12 + 'px';
+}
+function untip(){
+  const el = $('tip');
+  if(el) el.style.display = 'none';
+}
+function filteredC(){return C.filter(r=>match(r['Lido'],$('fStatus').value)&&match(r['Autor'],$('fAuthor').value)&&match(r['Editora'],$('fPublisher').value)&&match(r['Ano-Compra'],$('fPurchaseYear').value));}
+
+function readingType(r){
+  const raw = String(r['Formato_ou_Plataforma'] ?? '').trim();
+  if(!raw || raw === 'Não informado') return 'Físico';
+  if(['Audible','Spotify','Youtube','YouTube'].includes(raw)) return 'Audiolivro';
+  if(raw === 'Kindle') return 'eBook';
+  if(raw === 'Internet') return 'Leitura online';
+  return raw;
+}
+function filteredH(){
+  const y=$('fReadYear').value,
+        fmt=$('fFormat').value,
+        loan=$('fLoaner').value,
+        org=$('fOrigin').value,
+        st=$('fHistStatus').value;
+  return H.filter(r =>
+    (y==='__ALL__' || String(r['Ano de Leitura'] ?? 'Não informado')===y) &&
+    (fmt==='__ALL__' || readingType(r)===fmt) &&
+    (loan==='__ALL__' || String(r['Emprestado_de'] ?? 'Não informado')===loan) &&
+    (org==='__ALL__' || String(r['Origem_ou_Instituição'] ?? 'Não informado')===org) &&
+    (st==='__ALL__' || String(r['Status na Estante'] ?? 'Não informado')===st)
+  );
+}
+function hbars(id,data,{maxItems=10,percent=false,total=null}={}){
+  const el=$(id);
+  const rows=[...data].sort((a,b)=>b.value-a.value).slice(0,maxItems);
+  if(!rows.length){el.innerHTML='<div class="desc">Sem dados para os filtros selecionados.</div>';return;}
+  const max=Math.max(...rows.map(d=>d.value),1);
+  const denom=(total==null?rows.reduce((acc,d)=>acc+d.value,0):total);
+  el.innerHTML=rows.map(d=>{
+    const width=(d.value/max*100).toFixed(1);
+    const val=percent ? `${d.value} · ${percentText(d.value,denom)}` : String(d.value);
+    return `<div class="barrow"><div class="barlabel" title="${esc(d.label)}">${esc(d.label)}</div><div class="bartrack"><div class="barfill" style="width:${width}%"></div></div><div class="barval" style="width:${percent?'90px':'45px'}">${val}</div></div>`;
+  }).join('');
+}
+
+function svgBars(id,data,{percent=false}={}){let el=$(id),w=700,h=250,p={l:45,r:12,t:15,b:48}; if(!data.length){el.innerHTML='<div class="desc">Sem dados.</div>';return} let max=Math.max(1,...data.map(d=>d.value)), bw=(w-p.l-p.r)/data.length; let parts=[`<svg viewBox="0 0 ${w} ${h}">`]; parts.push(`<line x1="${p.l}" y1="${h-p.b}" x2="${w-p.r}" y2="${h-p.b}" stroke="#cfd6df"/>`); data.forEach((d,i)=>{let bh=(d.value/max)*(h-p.t-p.b),x=p.l+i*bw+bw*.15,y=h-p.b-bh;parts.push(`<rect x="${x}" y="${y}" width="${bw*.7}" height="${bh}" rx="3" fill="#557da8" data-label="${esc(d.label)}" data-value="${d.value}" class="tipitem"/>`);parts.push(`<text x="${x+bw*.35}" y="${h-p.b+16}" text-anchor="middle" font-size="9" fill="#657086">${esc(d.label)}</text>`);parts.push(`<text x="${x+bw*.35}" y="${Math.max(11,y-4)}" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">${percent?String(d.value).replace('.',',')+'%':d.value}</text>`)});parts.push('</svg>');el.innerHTML=parts.join('');el.querySelectorAll('.tipitem').forEach(n=>{n.onmousemove=e=>tip(e,n.dataset.label+': '+n.dataset.value+(percent?'%':''));n.onmouseleave=untip})}
+
+function svgPercentBars(id,data){
+  let el=$(id),w=700,h=270,p={l:45,r:12,t:24,b:50};
+  if(!data.length){el.innerHTML='<div class="desc">Sem dados.</div>';return}
+  let max=100,bw=(w-p.l-p.r)/data.length;
+  let parts=[`<svg viewBox="0 0 ${w} ${h}">`];
+  parts.push(`<line x1="${p.l}" y1="${h-p.b}" x2="${w-p.r}" y2="${h-p.b}" stroke="#cfd6df"/>`);
+  data.forEach((d,i)=>{
+    let bh=(d.value/max)*(h-p.t-p.b),x=p.l+i*bw+bw*.15,y=h-p.b-bh;
+    parts.push(`<rect x="${x}" y="${y}" width="${bw*.7}" height="${bh}" rx="3" fill="#557da8" class="tipitem" data-label="${esc(d.label)}" data-tip="${d.read} de ${d.total} livros · ${String(d.value).replace('.',',')}%"/>`);
+    parts.push(`<text x="${x+bw*.35}" y="${h-p.b+16}" text-anchor="middle" font-size="9" fill="#657086">${esc(d.label)}</text>`);
+    parts.push(`<text x="${x+bw*.35}" y="${Math.max(11,y-5)}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#334155">${d.read}/${d.total} · ${String(d.value).replace('.',',')}%</text>`);
+  });
+  parts.push('</svg>');
+  el.innerHTML=parts.join('');
+  el.querySelectorAll('.tipitem').forEach(n=>{
+    n.onmousemove=e=>tip(e,n.dataset.label+': '+n.dataset.tip);
+    n.onmouseleave=untip;
+  });
+}
+function svgGroupedBars(id,data){
+  const el=$(id),w=760,h=300,p={l:46,r:16,t:42,b:58};
+  if(!data.length){el.innerHTML='<div class="desc">Sem dados.</div>';return}
+  const max=Math.max(1,...data.flatMap(d=>[d.purchases,d.reads]));
+  const bw=(w-p.l-p.r)/data.length;
+  const sy=v=>h-p.b-(v/max)*(h-p.t-p.b);
+  const barW=Math.max(6,bw*.28);
+  let parts=[`<svg viewBox="0 0 ${w} ${h}">`];
+  parts.push(`<line x1="${p.l}" y1="${h-p.b}" x2="${w-p.r}" y2="${h-p.b}" stroke="#cfd6df"/>`);
+  // legenda
+  parts.push(`<rect x="${p.l}" y="12" width="12" height="12" rx="2" fill="#557da8"/><text x="${p.l+18}" y="22" font-size="10" fill="#475569">Adquiridos</text>`);
+  parts.push(`<rect x="${p.l+96}" y="12" width="12" height="12" rx="2" fill="#8a9fb8"/><text x="${p.l+114}" y="22" font-size="10" fill="#475569">Leituras realizadas</text>`);
+  data.forEach((d,i)=>{
+    const center=p.l+i*bw+bw/2;
+    const x1=center-barW-2, x2=center+2;
+    const y1=sy(d.purchases), y2=sy(d.reads);
+    const bh1=h-p.b-y1, bh2=h-p.b-y2;
+    parts.push(`<rect x="${x1}" y="${y1}" width="${barW}" height="${bh1}" rx="3" fill="#557da8" class="tipitem" data-tip="${esc(d.label)} — adquiridos: ${d.purchases}"/>`);
+    parts.push(`<rect x="${x2}" y="${y2}" width="${barW}" height="${bh2}" rx="3" fill="#8a9fb8" class="tipitem" data-tip="${esc(d.label)} — leituras realizadas: ${d.reads}"/>`);
+    if(d.purchases>0) parts.push(`<text x="${x1+barW/2}" y="${Math.max(34,y1-5)}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#334155">${d.purchases}</text>`);
+    if(d.reads>0) parts.push(`<text x="${x2+barW/2}" y="${Math.max(34,y2-5)}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#334155">${d.reads}</text>`);
+    parts.push(`<text x="${center}" y="${h-p.b+18}" text-anchor="middle" font-size="9" fill="#657086">${esc(d.label)}</text>`);
+  });
+  parts.push('</svg>');
+  el.innerHTML=parts.join('');
+  el.querySelectorAll('.tipitem').forEach(n=>{n.onmousemove=e=>tip(e,n.dataset.tip);n.onmouseleave=untip});
+}
+
+function lineChart(id,data){let el=$(id),w=700,h=250,p={l:42,r:16,t:20,b:45};if(!data.length){el.innerHTML='<div class="desc">Sem dados.</div>';return} data=[...data].sort((a,b)=>Number(a.label)-Number(b.label));let max=Math.max(...data.map(d=>d.value),1),minX=Number(data[0].label),maxX=Number(data[data.length-1].label),sx=x=>p.l+((x-minX)/(maxX-minX||1))*(w-p.l-p.r),sy=y=>h-p.b-(y/max)*(h-p.t-p.b);let pts=data.map(d=>`${sx(Number(d.label))},${sy(d.value)}`).join(' ');let parts=[`<svg viewBox="0 0 ${w} ${h}"><line x1="${p.l}" y1="${h-p.b}" x2="${w-p.r}" y2="${h-p.b}" stroke="#cfd6df"/><polyline fill="none" stroke="#496f9b" stroke-width="3" points="${pts}"/>`]; data.forEach((d,i)=>{let x=sx(Number(d.label)),y=sy(d.value);parts.push(`<circle cx="${x}" cy="${y}" r="4" fill="#355c89" class="tipitem" data-label="${d.label}" data-value="${d.value}"/>`);if(i%2===0||i===data.length-1)parts.push(`<text x="${x}" y="${h-p.b+16}" text-anchor="middle" font-size="9" fill="#657086">${d.label}</text>`)});parts.push('</svg>');el.innerHTML=parts.join('');el.querySelectorAll('.tipitem').forEach(n=>{n.onmousemove=e=>tip(e,n.dataset.label+': '+n.dataset.value+' leituras');n.onmouseleave=untip})}
+
+function monthlyReadChart(id, rows, year){
+  const el=$(id), w=700, h=250, p={l:42,r:16,t:20,b:45};
+  const months=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const vals=Array(12).fill(0);
+  let validDates=0, excludedJan1=0;
+  rows.forEach(r=>{
+    const raw=String(r['Data de Leitura']||'');
+    const m=raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(!m || Number(m[1])!==Number(year)) return;
+    const month=Number(m[2]), day=Number(m[3]);
+    // 01/01/AAAA é preservado para a métrica anual, mas não é usado em análises mensais/diárias.
+    if(month===1 && day===1){ excludedJan1++; return; }
+    if(month>=1 && month<=12){ vals[month-1]++; validDates++; }
+  });
+  if(!validDates){
+    el.innerHTML=`<div class="empty-result">Os registros de ${esc(year)} não possuem datas mensais confiáveis suficientes para detalhar a evolução dentro do ano. Datas 01/01/AAAA são desconsideradas nesta análise.</div>`;
+    return;
+  }
+  const max=Math.max(...vals,1), sx=i=>p.l+(i/11)*(w-p.l-p.r), sy=y=>h-p.b-(y/max)*(h-p.t-p.b);
+  const pts=vals.map((v,i)=>`${sx(i)},${sy(v)}`).join(' ');
+  let parts=[`<svg viewBox="0 0 ${w} ${h}"><line x1="${p.l}" y1="${h-p.b}" x2="${w-p.r}" y2="${h-p.b}" stroke="#cfd6df"/><polyline fill="none" stroke="#496f9b" stroke-width="3" points="${pts}"/>`];
+  vals.forEach((v,i)=>{
+    const x=sx(i), y=sy(v);
+    parts.push(`<circle cx="${x}" cy="${y}" r="4" fill="#355c89" class="tipitem" data-tip="${months[i]} ${year}: ${v} leitura${v===1?'':'s'}"/>`);
+    parts.push(`<text x="${x}" y="${h-p.b+16}" text-anchor="middle" font-size="9" fill="#657086">${months[i]}</text>`);
+    if(v>0) parts.push(`<text x="${x}" y="${Math.max(12,y-8)}" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">${v}</text>`);
+  });
+  parts.push('</svg>');
+  if(excludedJan1) parts.push(`<div class="smallnote">${excludedJan1} registro${excludedJan1===1?'':'s'} em 01/01/${esc(year)} ${excludedJan1===1?'foi desconsiderado':'foram desconsiderados'} na análise mensal.</div>`);
+  el.innerHTML=parts.join('');
+  el.querySelectorAll('.tipitem').forEach(n=>{n.onmousemove=e=>tip(e,n.dataset.tip);n.onmouseleave=untip});
+}
+
+function fmtDateBR(v){
+  if(!v)return 'Não informado';
+  const p=String(v).split('-');
+  return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : String(v);
+}
+
+function collectionTable(rows){
+  if(!rows.length)return '<div class="empty-result">Nenhum livro encontrado.</div>';
+  const sorted=[...rows].sort((a,b)=>String(a.Nome||'').localeCompare(String(b.Nome||''),'pt-BR'));
+  return `<table class="result-table">
+    <thead><tr><th>Livro</th><th>Autor</th><th>Editora</th><th>Ano de compra</th><th>Status</th></tr></thead>
+    <tbody>${sorted.map(r=>`<tr>
+      <td class="title-cell">${esc(r.Nome||'Não informado')}</td>
+      <td>${esc(r.Autor||'Não informado')}</td>
+      <td>${esc(r.Editora||'Não informado')}</td>
+      <td>${esc(r['Ano-Compra']??'Não informado')}</td>
+      <td>${esc(r.Lido||'Não informado')}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+function historyTable(rows){
+  if(!rows.length)return '<div class="empty-result">Nenhum registro encontrado.</div>';
+  const sorted=[...rows].sort((a,b)=>{
+    const da=a['Data de Leitura']||'0000-00-00', db=b['Data de Leitura']||'0000-00-00';
+    return db.localeCompare(da) || String(a.Nome||'').localeCompare(String(b.Nome||''),'pt-BR');
+  });
+  return `<table class="result-table">
+    <thead><tr><th>Livro</th><th>Autor</th><th>Data</th><th>Tipo de leitura</th><th>Status histórico</th><th>Quem emprestou</th></tr></thead>
+    <tbody>${sorted.map(r=>`<tr>
+      <td class="title-cell">${esc(r.Nome||'Não informado')}</td>
+      <td>${esc(r.Autor||'Não informado')}</td>
+      <td>${esc(fmtDateBR(r['Data de Leitura']))}</td>
+      <td>${esc(readingType(r))}</td>
+      <td>${esc(r['Status na Estante']||'Não informado')}</td>
+      <td>${esc(r['Emprestado_de']||'—')}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+function activeFilterInfo(){
+  const cIds=['fStatus','fAuthor','fPublisher','fPurchaseYear'];
+  const hIds=['fReadYear','fFormat','fLoaner','fOrigin','fHistStatus'];
+  const activeC=cIds.filter(id=>$(id)&&$(id).value&&$(id).value!=='__ALL__');
+  const activeH=hIds.filter(id=>$(id)&&$(id).value&&$(id).value!=='__ALL__');
+  return {activeC,activeH};
+}
+function contextualTitle(info){
+  if(info.activeC.length===1 && info.activeC[0]==='fStatus'){
+    const v=$('fStatus').value;
+    if(v==='Lendo') return 'Livros em andamento';
+    if(v==='Relendo') return 'Livros em releitura';
+    if(v==='Sim') return 'Livros lidos na estante atual';
+    if(v==='Não') return 'Livros não lidos na estante atual';
+    if(v==='Abandonado') return 'Livros abandonados';
+  }
+  if(info.activeC.length && !info.activeH.length) return 'Livros da estante correspondentes aos filtros';
+  if(info.activeH.length && !info.activeC.length) return 'Leituras registradas correspondentes aos filtros';
+  return 'Resultados combinados dos filtros';
+}
+function showFixedLists(){
+  $('allCollectionCount').textContent=`${C.length} livros`;
+  $('allCollectionResults').innerHTML=collectionTable(C);
+  $('allHistoryCount').textContent=`${H.length} registros`;
+  $('allHistoryResults').innerHTML=historyTable(H);
+}
+function showContextualResults(c,h){
+  const info=activeFilterInfo();
+
+  // ESTANTE: resultados aparecem imediatamente abaixo dos indicadores da estante.
+  const shelfCard=$('shelfResultsCard');
+  if(info.activeC.length){
+    shelfCard.style.display='block';
+    $('shelfResultsTitle').textContent=contextualTitle({activeC:info.activeC,activeH:[]});
+    $('shelfResultsCount').textContent=`${c.length} ${c.length===1?'livro':'livros'}`;
+    $('shelfResults').innerHTML=collectionTable(c);
+  }else{
+    shelfCard.style.display='none';
+    $('shelfResults').innerHTML='';
+  }
+
+  // HISTÓRICO: resultados permanecem abaixo das métricas do histórico.
+  const historyCard=$('historyResultsCard');
+  if(info.activeH.length){
+    historyCard.style.display='block';
+    $('historyResultsCount').textContent=`${h.length} ${h.length===1?'registro':'registros'}`;
+    $('historyResults').innerHTML=historyTable(h);
+  }else{
+    historyCard.style.display='none';
+    $('historyResults').innerHTML='';
+  }
+}
+
+function percentText(n,total){
+  if(!total) return '0,00%';
+  return (100*n/total).toFixed(2).replace('.',',')+'%';
+}
+function percentBars(id, rows, total, maxItems=10){
+  const data=[...rows].sort((a,b)=>b.value-a.value).slice(0,maxItems);
+  const max=Math.max(...data.map(d=>d.value),1);
+  $(id).innerHTML = data.length ? data.map(d=>`
+    <div class="hrow">
+      <div class="hlabel">${esc(d.label)}</div>
+      <div class="htrack"><div class="hfill" style="width:${(d.value/max*100).toFixed(1)}%"></div></div>
+      <div class="hval">${d.value} · ${percentText(d.value,total)}</div>
+    </div>`).join('') : '<div class="empty-result">Sem dados para os filtros selecionados.</div>';
+}
+function updateFixedSummary(){
+  $('kBaseTotal').textContent = C.length;
+  $('kBaseHistory').textContent = H.length;
+  $('kBase2026').textContent = H.filter(r => r['Ano de Leitura'] === 2026).length;
+}
+
+function filteredShelfIgnoringStatus(){
+  const author = $('fAuthor').value;
+  const publisher = $('fPublisher').value;
+  const year = $('fPurchaseYear').value;
+  return C.filter(r =>
+    (author === '__ALL__' || String(r.Autor ?? 'Não informado') === author) &&
+    (publisher === '__ALL__' || String(r.Editora ?? 'Não informado') === publisher) &&
+    (year === '__ALL__' || String(r['Ano-Compra'] ?? 'Não informado') === year)
+  );
+}
+function updateShelfIndicators(c){
+  const status = $('fStatus').value;
+  const author = $('fAuthor').value;
+  const publisher = $('fPublisher').value;
+  const year = $('fPurchaseYear').value;
+  const base = filteredShelfIgnoringStatus();
+  const baseTotal = base.length || 0;
+
+  $('kTotal').textContent = c.length;
+
+  // Título dinâmico do cartão principal da estante
+  if (status !== '__ALL__') {
+    const labels = {
+      'Lendo': 'Livros em andamento',
+      'Relendo': 'Livros em releitura',
+      'Sim': 'Livros lidos',
+      'Não': 'Livros não lidos',
+      'Abandonado': 'Livros abandonados'
+    };
+    $('kShelfCutLabel').textContent = labels[status] || 'Livros no recorte';
+    $('kTotalSub').textContent = `${c.length} livros · ${percentText(c.length, baseTotal)} do recorte da estante`;
+  } else if (author !== '__ALL__') {
+    $('kShelfCutLabel').textContent = `Livros de ${author}`;
+    $('kTotalSub').textContent = `${c.length} livros no recorte atual`;
+  } else if (publisher !== '__ALL__') {
+    $('kShelfCutLabel').textContent = `Livros da editora ${publisher}`;
+    $('kTotalSub').textContent = `${c.length} livros no recorte atual`;
+  } else if (year !== '__ALL__') {
+    $('kShelfCutLabel').textContent = `Livros comprados em ${year}`;
+    $('kTotalSub').textContent = `${c.length} livros no recorte atual`;
+  } else {
+    $('kShelfCutLabel').textContent = 'Livros na estante';
+    $('kTotalSub').textContent = `${c.length} livros no recorte atual`;
+  }
+
+  // Cartões de lidos / não lidos só fazem sentido quando não há filtro de status.
+  const read = c.filter(r => r.Lido === 'Sim').length;
+  const unread = c.filter(r => r.Lido === 'Não').length;
+  $('kRead').textContent = read;
+  $('kUnread').textContent = unread;
+  $('kReadRate').textContent = `${percentText(read, c.length)} do recorte da estante`;
+  $('kUnreadRate').textContent = `${percentText(unread, c.length)} do recorte da estante`;
+
+  const hideBreakdown = status !== '__ALL__';
+  $('kReadCard').classList.toggle('is-hidden', hideBreakdown);
+  $('kUnreadCard').classList.toggle('is-hidden', hideBreakdown);
+
+  // Insight dinâmico de autor para o status escolhido (ex.: autor mais abandonado).
+  const insight=$('shelfAuthorInsight');
+  if(status !== '__ALL__'){
+    const authors=counts(c,'Autor').filter(d=>d.label!=='Não informado').sort((a,b)=>b.value-a.value);
+    insight.style.display='grid';
+    const statusLabels={
+      'Abandonado':'livros abandonados',
+      'Sim':'livros lidos',
+      'Não':'livros não lidos',
+      'Lendo':'livros em andamento',
+      'Relendo':'livros em releitura'
+    };
+    $('kShelfAuthorInsightLabel').textContent=`Destaque de autor entre ${statusLabels[status]||'o status selecionado'}`;
+    if(!authors.length){
+      $('kShelfAuthorInsightValue').textContent='—';
+      $('kShelfAuthorInsightSub').textContent='Sem autor informado neste recorte';
+    }else{
+      const max=authors[0].value;
+      const tied=authors.filter(x=>x.value===max);
+      if(tied.length===1){
+        $('kShelfAuthorInsightValue').textContent=tied[0].label;
+        $('kShelfAuthorInsightSub').textContent=`${max} de ${c.length} livros · ${percentText(max,c.length)} do recorte`;
+      }else{
+        $('kShelfAuthorInsightValue').textContent=`Empate entre ${tied.length} autores`;
+        const preview=tied.slice(0,4).map(x=>x.label).join(', ');
+        $('kShelfAuthorInsightSub').textContent=`cada um com ${max} de ${c.length} livros · ${percentText(max,c.length)} | ${preview}${tied.length>4?'…':''}`;
+      }
+    }
+  }else{
+    insight.style.display='none';
+  }
+}
+function updateHistoryFilterSummary(h){
+  const year = $('fReadYear').value;
+  const format = $('fFormat').value;
+  const loaner = $('fLoaner').value;
+  const origin = $('fOrigin').value;
+  const status = $('fHistStatus').value;
+  const active = [year, format, loaner, origin, status].filter(v => v !== '__ALL__').length;
+  const wrap = $('historyFilterSummary');
+
+  if(!active){
+    wrap.style.display = 'none';
+    return;
+  }
+
+  wrap.style.display = 'grid';
+  $('kHistoryCut').textContent = h.length;
+
+  if(active === 1 && year !== '__ALL__') {
+    $('kHistoryCutLabel').textContent = `Leituras em ${year}`;
+  } else if(active === 1 && format !== '__ALL__') {
+    $('kHistoryCutLabel').textContent = `Leituras em ${format}`;
+  } else if(active === 1 && loaner !== '__ALL__') {
+    $('kHistoryCutLabel').textContent = `Leituras de livros emprestados por ${loaner}`;
+  } else if(active === 1 && origin !== '__ALL__') {
+    $('kHistoryCutLabel').textContent = `Leituras de ${origin}`;
+  } else if(active === 1 && status !== '__ALL__') {
+    $('kHistoryCutLabel').textContent = `Leituras com status ${status}`;
+  } else {
+    $('kHistoryCutLabel').textContent = 'Leituras no recorte selecionado';
+  }
+
+  const details=[];
+  if(year !== '__ALL__') details.push(`ano ${year}`);
+  if(format !== '__ALL__') details.push(format);
+  if(loaner !== '__ALL__') details.push(`emprestado por ${loaner}`);
+  if(origin !== '__ALL__') details.push(`origem ${origin}`);
+  if(status !== '__ALL__') details.push(`status ${status}`);
+  const detailText = active > 1 ? ` · ${details.join(' · ')}` : '';
+  $('kHistoryCutSub').textContent = `${h.length} de ${H.length} registros · ${percentText(h.length, H.length)} do histórico${detailText}`;
+}
+
+function reliableReadDate(r){
+  const raw=String(r['Data de Leitura']||'');
+  const m=raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m) return null;
+  const y=Number(m[1]), month=Number(m[2]), day=Number(m[3]);
+  if(!y || month<1 || month>12 || day<1 || day>31) return null;
+  // Regra de qualidade definida pela usuária: 01/01/AAAA pode representar data aproximada.
+  if(month===1 && day===1) return null;
+  const d=new Date(Date.UTC(y,month-1,day));
+  if(d.getUTCFullYear()!==y || d.getUTCMonth()!==month-1 || d.getUTCDate()!==day) return null;
+  return d;
+}
+function historyIgnoringYear(){
+  const fmt=$('fFormat').value,
+        loan=$('fLoaner').value,
+        org=$('fOrigin').value,
+        st=$('fHistStatus').value;
+  return H.filter(r =>
+    (fmt==='__ALL__' || readingType(r)===fmt) &&
+    (loan==='__ALL__' || String(r['Emprestado_de'] ?? 'Não informado')===loan) &&
+    (org==='__ALL__' || String(r['Origem_ou_Instituição'] ?? 'Não informado')===org) &&
+    (st==='__ALL__' || String(r['Status na Estante'] ?? 'Não informado')===st)
+  );
+}
+function updateReadingPatternMetrics(h){
+  const months=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const weekdays=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  const selectedYear=$('fReadYear').value;
+  const historyBase=historyIgnoringYear(); // respeita todos os filtros, exceto o ano, para comparações históricas.
+
+  // 1) Sem ano: mostra o(s) ano(s) campeão(ões) dentro do recorte dos demais filtros.
+  // Com ano: mostra a posição do ano selecionado no mesmo universo comparável.
+  const yearCounts=counts(historyBase,'Ano de Leitura').filter(d=>d.label!=='Não informado').sort((a,b)=>b.value-a.value || Number(a.label)-Number(b.label));
+  if(selectedYear!=='__ALL__'){
+    $('pPeakYearLabel').textContent=`Posição de ${selectedYear} no histórico`;
+    const current=yearCounts.find(x=>String(x.label)===String(selectedYear));
+    if(current){
+      const distinct=[...new Set(yearCounts.map(x=>x.value))].sort((a,b)=>b-a);
+      const rank=distinct.indexOf(current.value)+1;
+      const same=yearCounts.filter(x=>x.value===current.value && String(x.label)!==String(selectedYear)).map(x=>x.label);
+      const leaders=yearCounts.filter(x=>x.value===yearCounts[0].value).map(x=>x.label);
+      $('pPeakYear').textContent=`${rank}ª posição · ${current.value} leitura${current.value===1?'':'s'}`;
+      const tieText=same.length?` · empate com ${same.join(' e ')}`:'';
+      const recordText=rank===1 ? ' · ano líder no recorte' : ` · recorde: ${yearCounts[0].value} em ${leaders.join(' e ')}`;
+      $('pPeakYearSub').textContent=`ranking por quantidade anual${tieText}${recordText}`;
+    }else{
+      $('pPeakYear').textContent='Sem leituras no recorte';
+      $('pPeakYearSub').textContent='Este ano não possui registros com os demais filtros selecionados.';
+    }
+  }else{
+    $('pPeakYearLabel').textContent='Ano em que mais leu';
+    if(yearCounts.length){
+      const max=yearCounts[0].value, tied=yearCounts.filter(x=>x.value===max);
+      $('pPeakYear').textContent=tied.length===1 ? tied[0].label : `Empate: ${tied.map(x=>x.label).join(' e ')}`;
+      $('pPeakYearSub').textContent=`${max} leitura${max===1?'':'s'} no ano${tied.length>1?' em cada ano':''} · ${historyBase.length} registros no universo comparável`;
+    }else{
+      $('pPeakYear').textContent='—'; $('pPeakYearSub').textContent='Sem ano de leitura informado no recorte';
+    }
+  }
+
+  // 2) Mês mais lido: sempre usa o recorte completo dos filtros atuais.
+  const dated=h.map(r=>({r,d:reliableReadDate(r)})).filter(x=>x.d);
+  $('pPeakMonthLabel').textContent=selectedYear==='__ALL__' ? 'Mês mais lido no recorte confiável' : `Mês mais lido em ${selectedYear}`;
+  if(dated.length){
+    const mc={}; dated.forEach(x=>{const m=x.d.getUTCMonth();mc[m]=(mc[m]||0)+1});
+    const max=Math.max(...Object.values(mc));
+    const tied=Object.entries(mc).filter(([,v])=>v===max).map(([m])=>Number(m));
+    $('pPeakMonth').textContent=tied.length===1 ? months[tied[0]] : `Empate: ${tied.map(m=>months[m]).join(' e ')}`;
+    $('pPeakMonthSub').textContent=`${max} leitura${max===1?'':'s'} · ${percentText(max,dated.length)} das ${dated.length} leituras do recorte com data mensal confiável`;
+  }else{
+    $('pPeakMonth').textContent='Sem dado mensal confiável';
+    $('pPeakMonthSub').textContent='Datas 01/01/AAAA são excluídas; janeiro só é considerado de 02/01 a 31/01.';
+  }
+
+  // 3) Tendência histórica é exibida apenas nos Recordes fixos.
+
+  // 4) Dia da semana: usa exatamente o recorte completo selecionado.
+  const reliableCurrent=h.map(r=>({r,d:reliableReadDate(r)})).filter(x=>x.d);
+  if(reliableCurrent.length){
+    const wc={}; reliableCurrent.forEach(x=>{const w=x.d.getUTCDay();wc[w]=(wc[w]||0)+1});
+    const max=Math.max(...Object.values(wc));
+    const tied=Object.entries(wc).filter(([,v])=>v===max).map(([w])=>Number(w));
+    $('pPeakWeekday').textContent=tied.length===1 ? weekdays[tied[0]] : `Empate: ${tied.map(w=>weekdays[w]).join(' e ')}`;
+    $('pPeakWeekdaySub').textContent=`${max} finalizaç${max===1?'ão':'ões'} · ${percentText(max,reliableCurrent.length)} das ${reliableCurrent.length} leituras do recorte com data confiável`;
+  }else{
+    $('pPeakWeekday').textContent='Sem dado diário confiável';
+    $('pPeakWeekdaySub').textContent='O recorte não possui datas utilizáveis após excluir 01/01/AAAA.';
+  }
+}
+
+function updateReadingProfile(h){
+  updateHistoryFilterSummary(h);
+  updateReadingPatternMetrics(h);
+  const authors = counts(h, 'Autor').filter(d => d.label !== 'Não informado').sort((a,b) => b.value - a.value);
+  const formatMap={};
+  h.forEach(r=>{const t=readingType(r);formatMap[t]=(formatMap[t]||0)+1});
+  const formats=Object.entries(formatMap).map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value);
+  const statuses = counts(h, 'Status na Estante').sort((a,b) => b.value - a.value);
+
+  function applyTopMetric(titleId, subId, items, singularLabel){
+    if(!items.length){
+      $(titleId).textContent = '—';
+      $(subId).textContent = 'Sem dados';
+      return;
+    }
+    const max = items[0].value;
+    const tied = items.filter(x => x.value === max);
+    if(tied.length === 1){
+      $(titleId).textContent = tied[0].label;
+      $(subId).textContent = `${tied[0].value} de ${h.length} registros · ${percentText(tied[0].value, h.length)}`;
+    }else{
+      $(titleId).textContent = `Empate entre ${tied.length} ${singularLabel}${tied.length > 1 ? 'es' : ''}`;
+      const preview = tied.slice(0,3).map(x => x.label).join(', ');
+      const suffix = tied.length > 3 ? '…' : '';
+      $(subId).textContent = `cada um com ${max} de ${h.length} registros · ${percentText(max, h.length)} | ${preview}${suffix}`;
+    }
+  }
+
+  applyTopMetric('pTopAuthor', 'pTopAuthorSub', authors, 'autor');
+  applyTopMetric('pTopFormat', 'pTopFormatSub', formats, 'formato');
+  applyTopMetric('pTopHistStatus', 'pTopHistStatusSub', statuses, 'categoria');
+
+  // Gráficos detalhados
+  hbars('cReadAuthors', authors, {maxItems: 10, percent: true, total: h.length});
+  hbars('cFormatShare', formats, {maxItems: 10, percent: true, total: h.length});
+  hbars('cHistStatus', statuses, {maxItems: 12, percent: true, total: h.length});
+}
+
+function purchaseReadComparison(h){
+  const collectionByKey={};
+  C.forEach(c=>{
+    const k=`${normalizeKey(c.Nome)}||${normalizeKey(c.Autor)}`;
+    if(!collectionByKey[k]) collectionByKey[k]=[];
+    collectionByKey[k].push(c);
+  });
+
+  const validatedByHistoryKey={};
+  VALIDATED_CONCILIATION.forEach(v=>{
+    const hk=`${normalizeKey(v.history_title)}||${normalizeKey(v.history_author)}`;
+    validatedByHistoryKey[hk]=v;
+  });
+
+  const diffs=[];
+  let exactUsed=0, validatedUsed=0, skippedAmbiguous=0;
+
+  h.forEach(hr=>{
+    if(hr['Ano de Leitura']==null) return;
+    const hk=`${normalizeKey(hr.Nome)}||${normalizeKey(hr.Autor)}`;
+    let candidates=(collectionByKey[hk]||[]).filter(c=>c['Ano-Compra']!=null);
+    let source='exact';
+
+    if(!candidates.length && validatedByHistoryKey[hk]){
+      const v=validatedByHistoryKey[hk];
+      const ck=`${normalizeKey(v.collection_title)}||${normalizeKey(v.collection_author)}`;
+      candidates=(collectionByKey[ck]||[]).filter(c=>c['Ano-Compra']!=null);
+      source='validated';
+    }
+
+    // Não escolhe automaticamente entre múltiplas edições com ano conhecido.
+    if(candidates.length!==1){
+      if(candidates.length>1) skippedAmbiguous++;
+      return;
+    }
+
+    const c=candidates[0];
+    diffs.push(Number(hr['Ano de Leitura']) - Number(c['Ano-Compra']));
+    if(source==='exact') exactUsed++; else validatedUsed++;
+  });
+
+  const groups=[
+    {label:'Lido antes da compra desta edição',value:diffs.filter(d=>d<0).length},
+    {label:'Mesmo ano',value:diffs.filter(d=>d===0).length},
+    {label:'1 ano depois',value:diffs.filter(d=>d===1).length},
+    {label:'2+ anos depois',value:diffs.filter(d=>d>=2).length}
+  ];
+  hbars('cPurchaseReadLag',groups,{maxItems:4,percent:true,total:diffs.length});
+
+  const note=$('purchaseReadMatchNote');
+  if(note){
+    note.textContent=`Cálculo baseado em ${diffs.length} correspondências com os dois anos informados (${exactUsed} exatas + ${validatedUsed} validadas manualmente na conciliação). Como a compra possui apenas o ano, o resultado indica diferença aproximada em anos — não o tempo exato até a leitura.${skippedAmbiguous?` ${skippedAmbiguous} correspondência(s) ambígua(s) entre edições foram excluídas.`:''}`;
+  }
+}
+function normalizeKey(v){
+  return String(v??'')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ');
+}
+function update(){
+  const c = filteredC();
+  const h = filteredH();
+
+  updateShelfIndicators(c);
+  updateReadingProfile(h);
+
+  // HISTÓRICO: com um ano selecionado, detalha a evolução dentro do ano usando Data de Leitura.
+  // Sem um ano específico, mantém a visão anual.
+  const selectedReadYear = $('fReadYear').value;
+  if(selectedReadYear !== '__ALL__'){
+    $('readEvolutionTitle').textContent = `Evolução das leituras em ${selectedReadYear}`;
+    $('readEvolutionDesc').textContent = 'Distribuição mensal usando apenas datas confiáveis; registros 01/01/AAAA são desconsiderados nesta análise.';
+    monthlyReadChart('cReadYear', h, selectedReadYear);
+  } else {
+    $('readEvolutionTitle').textContent = 'Evolução das leituras por ano';
+    $('readEvolutionDesc').textContent = 'Quantidade de registros de leitura por ano dentro dos filtros do histórico.';
+    const yr = counts(h, 'Ano de Leitura')
+      .filter(d => d.label !== 'Não informado')
+      .sort((a,b) => Number(a.label) - Number(b.label))
+      .map(d => ({label: d.label, value: d.value}));
+    lineChart('cReadYear', yr);
+  }
+
+  // ESTANTE: gráfico de status em formato comparativo quando houver filtro de status
+  const selectedStatus = $('fStatus').value;
+  if (selectedStatus === '__ALL__') {
+    hbars('cStatus', counts(c, 'Lido'), {maxItems: 6, percent: true, total: c.length});
+  } else {
+    const base = filteredShelfIgnoringStatus();
+    const selectedCount = base.filter(r => String(r.Lido ?? 'Não informado') === selectedStatus).length;
+    const otherCount = Math.max(base.length - selectedCount, 0);
+    hbars('cStatus', [
+      {label: selectedStatus, value: selectedCount},
+      {label: 'Outros status', value: otherCount}
+    ], {maxItems: 2, percent: true, total: base.length});
+  }
+
+  // ESTANTE: demais gráficos seguem os filtros da estante
+  hbars('cAuthors', counts(c, 'Autor').filter(d => d.label !== 'Não informado'), {maxItems: 10, percent: true, total: c.length});
+  hbars('cPublishers', counts(c, 'Editora').filter(d => d.label !== 'Não informado'), {maxItems: 10, percent: true, total: c.length});
+  svgBars(
+    'cPurchases',
+    counts(c, 'Ano-Compra')
+      .filter(d => d.label !== 'Não informado')
+      .sort((a,b) => Number(a.label) - Number(b.label))
+  );
+
+  // COMPARAÇÃO TEMPORAL: aquisições e leituras são métricas independentes.
+  // Um livro lido em determinado ano pode ter sido comprado em qualquer outro ano.
+  const purchaseSeriesBase = filteredShelfIgnoringStatus();
+  const purchaseYears = purchaseSeriesBase
+    .map(r => r['Ano-Compra'])
+    .filter(v => v != null && v !== '' && v !== 'Não informado')
+    .map(Number)
+    .filter(Number.isFinite);
+  const minPurchaseYear = purchaseYears.length ? Math.min(...purchaseYears) : 2015;
+  const maxComparisonYear = Math.max(
+    purchaseYears.length ? Math.max(...purchaseYears) : 2026,
+    ...h.map(r=>r['Ano de Leitura']).filter(v=>v!=null && v!=='' && v!=='Não informado').map(Number).filter(Number.isFinite)
+  );
+  const purchaseCounts = {};
+  purchaseSeriesBase.forEach(r=>{
+    const raw=r['Ano-Compra'];
+    if(raw==null || raw==='' || raw==='Não informado') return;
+    const y=Number(raw);
+    if(Number.isFinite(y)) purchaseCounts[y]=(purchaseCounts[y]||0)+1;
+  });
+  const readCounts = {};
+  h.forEach(r=>{
+    const raw=r['Ano de Leitura'];
+    if(raw==null || raw==='' || raw==='Não informado') return;
+    const y=Number(raw);
+    if(Number.isFinite(y)) readCounts[y]=(readCounts[y]||0)+1;
+  });
+  const annualComparison=[];
+  for(let y=minPurchaseYear;y<=maxComparisonYear;y++){
+    annualComparison.push({label:String(y),purchases:purchaseCounts[y]||0,reads:readCounts[y]||0});
+  }
+  svgGroupedBars('cRate', annualComparison);
+
+  // HISTÓRICO: gráficos conectados aos filtros do histórico
+  hbars('cLoaners', counts(h, 'Emprestado_de').filter(d => d.label !== 'Não informado'), {maxItems: 12, percent: true, total: h.length});
+  const originItems = counts(h, 'Origem_ou_Instituição').filter(d => d.label !== 'Não informado');
+  if(originItems.length){
+    hbars('cOrigins', originItems, {maxItems: 12, percent: true, total: h.length});
+  } else {
+    $('cOrigins').innerHTML = `<div class="empty-result">Nenhum dos ${h.length} registros deste recorte possui origem ou instituição preenchida.</div>`;
+  }
+
+  purchaseReadComparison(h);
+
+  showContextualResults(c, h);
+}
+['fStatus','fAuthor','fPublisher','fPurchaseYear','fReadYear','fFormat','fLoaner','fOrigin','fHistStatus'].forEach(id=>$(id).addEventListener('change',update));
+function resetCollectionFilters(){['fStatus','fAuthor','fPublisher','fPurchaseYear'].forEach(id=>$(id).value='__ALL__');update()}
+function resetHistoryFilters(){['fReadYear','fFormat','fLoaner','fOrigin','fHistStatus'].forEach(id=>$(id).value='__ALL__');update()}
+showFixedLists();
+
+function updateFixedReadingRecords(){
+  const months=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const weekdays=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  const yc=counts(H,'Ano de Leitura').filter(d=>d.label!=='Não informado').sort((a,b)=>b.value-a.value || Number(a.label)-Number(b.label));
+  if(yc.length){
+    const max=yc[0].value, tied=yc.filter(x=>x.value===max);
+    $('fixedPeakYear').textContent=tied.length===1?tied[0].label:`Empate: ${tied.map(x=>x.label).join(' e ')}`;
+    $('fixedPeakYearSub').textContent=`${max} leituras${tied.length>1?' em cada ano':' no ano'}`;
+  }
+  const reliable=H.map(r=>reliableReadDate(r)).filter(Boolean);
+  $('fixedReliableDates').textContent=`${reliable.length} de ${H.length}`;
+  $('fixedReliableDatesSub').textContent=`${percentText(reliable.length,H.length)} do histórico com data mensal/diária confiável`;
+  if(reliable.length){
+    const mc={}; reliable.forEach(d=>{const m=d.getUTCMonth();mc[m]=(mc[m]||0)+1});
+    const mm=Math.max(...Object.values(mc)), mt=Object.entries(mc).filter(([,v])=>v===mm).map(([m])=>Number(m));
+    $('fixedPeakMonth').textContent=mt.length===1?months[mt[0]]:`Empate: ${mt.map(m=>months[m]).join(' e ')}`;
+    $('fixedPeakMonthSub').textContent=`${mm} leituras · ${percentText(mm,reliable.length)} das datas confiáveis`;
+    const wc={}; reliable.forEach(d=>{const w=d.getUTCDay();wc[w]=(wc[w]||0)+1});
+    const wm=Math.max(...Object.values(wc)), wt=Object.entries(wc).filter(([,v])=>v===wm).map(([w])=>Number(w));
+    $('fixedPeakWeekday').textContent=wt.length===1?weekdays[wt[0]]:`Empate: ${wt.map(w=>weekdays[w]).join(' e ')}`;
+    $('fixedPeakWeekdaySub').textContent=`${wm} finalizações · ${percentText(wm,reliable.length)} das datas confiáveis`;
+
+    const perYear={};
+    H.forEach(r=>{
+      const d=reliableReadDate(r); if(!d) return;
+      const y=d.getUTCFullYear(), m=d.getUTCMonth();
+      if(!perYear[y]) perYear[y]={};
+      perYear[y][m]=(perYear[y][m]||0)+1;
+    });
+    const peakFreq={}; let yearsUsed=0;
+    Object.values(perYear).forEach(mc=>{
+      const vals=Object.values(mc); if(!vals.length) return;
+      yearsUsed++;
+      const mx=Math.max(...vals);
+      Object.entries(mc).forEach(([m,v])=>{if(v===mx) peakFreq[m]=(peakFreq[m]||0)+1});
+    });
+    const trend=Object.entries(peakFreq).map(([m,v])=>({m:Number(m),v})).sort((a,b)=>b.v-a.v || a.m-b.m);
+    if(trend.length){
+      const max=trend[0].v, tied=trend.filter(x=>x.v===max);
+      $('fixedPeakMonthTrend').textContent=tied.length===1 ? months[tied[0].m] : `Empate: ${tied.map(x=>months[x.m]).join(' e ')}`;
+      const runners=trend.filter(x=>x.v<max).slice(0,2).map(x=>`${months[x.m]} (${x.v})`).join(' · ');
+      $('fixedPeakMonthTrendSub').textContent=`mês de pico em ${max} de ${yearsUsed} anos com dados mensais confiáveis${runners?` · depois: ${runners}`:''}`;
+    }else{
+      $('fixedPeakMonthTrend').textContent='—';
+      $('fixedPeakMonthTrendSub').textContent='Sem anos comparáveis com datas mensais confiáveis';
+    }
+  }
+}
+
+updateFixedSummary();
+updateFixedReadingRecords();
+update();
+</script></body></html>

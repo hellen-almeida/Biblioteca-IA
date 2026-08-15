@@ -1,0 +1,6 @@
+{
+  "name": "Minha Estante IA",
+  "description": "Aplicativo de consulta, pesquisa e análise da biblioteca pessoal e histórico de leituras com IA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
